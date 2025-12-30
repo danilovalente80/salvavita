@@ -1,0 +1,18 @@
+<div class="panel">
+    <h2>⏱️ Task Schedulati</h2>
+    <div class="controls">
+        <button onclick="loadScheduledTasks()">Carica Dati</button>
+        <button class="danger" onclick="avviaProcessi()">🔄 Riavvia Tasks</button>
+    </div>
+    <div id="tasksLoading" class="loading">
+        <div class="spinner"></div>
+        <p>Caricamento dati...</p>
+    </div>
+    <div id="tasksError" class="error" style="display: none;"></div>
+    <div id="tasksSuccess" class="success" style="display: none;"></div>
+    <div id="tasksContent">
+        <div class="empty-state">
+            <p>Clicca "Carica Dati" per visualizzare i task schedulati</p>
+        </div>
+    </div>
+</div>
