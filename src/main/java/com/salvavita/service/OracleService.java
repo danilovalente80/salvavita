@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.net.ssl.*;
+import java.security.cert.X509Certificate;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -415,6 +417,45 @@ public class OracleService {
     }
 
     /**
+     * Disabilita la verifica SSL per chiamate HTTPS (SOLO PER DEVELOPMENT/TESTING)
+     * ⚠️ ATTENZIONE: Non usare in produzione!
+     */
+    private static void disableSSLVerification() {
+        try {
+            // Crea un TrustManager che accetta tutti i certificati
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+            };
+
+            // Installa il TrustManager che accetta tutti i certificati
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+
+            // Crea un HostnameVerifier che accetta tutti gli hostname
+            HostnameVerifier allHostsValid = new HostnameVerifier() {
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            };
+
+            // Installa il HostnameVerifier
+            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Errore nella disabilitazione SSL: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Elimina un protocollo temporaneo e i suoi dati correlati (SENZA AUTO-COMMIT)
      */
     public Map<String, Object> deleteProtoTemporaneo(String nomeEnte, long sequLongId) throws Exception {
@@ -498,6 +539,10 @@ public class OracleService {
      * Lancia le URL dei task in background
      */
     public void launchTaskUrls() {
+        // ⚠️ DISABILITA VERIFICA SSL (solo per development/testing)
+        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
+        disableSSLVerification();
+
         String[] urls = {
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
@@ -507,24 +552,24 @@ public class OracleService {
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
         };
-        
+
         logger.info("Lancio {} URL di task in background", urls.length);
-        
+
         // Esegui ogni URL in un thread separato (background)
         for (String url : urls) {
             new Thread(() -> {
                 try {
                     logger.info("Richiamando URL in background: {}", url);
                     java.net.URL urlObj = new java.net.URL(url);
-                    java.net.HttpURLConnection conn = (java.net.HttpURLConnection) urlObj.openConnection();
+                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
                     conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(5000);
-                    conn.setReadTimeout(5000);
+                    conn.setConnectTimeout(10000);
+                    conn.setReadTimeout(10000);
                     int responseCode = conn.getResponseCode();
-                    logger.info("Risposta da {}: {}", url, responseCode);
+                    logger.info("✅ Risposta da {}: HTTP {}", url, responseCode);
                     conn.disconnect();
                 } catch (Exception e) {
-                    logger.error("Errore nel richiamare {}: {}", url, e.getMessage());
+                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
                 }
             }).start();
         }
