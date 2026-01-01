@@ -2,6 +2,30 @@
  * protocolli.js - Logica specifica per il pannello Protocolli Sospesi
  */
 
+// MOSTRA MESSAGGIO (SUCCESS O ERROR)
+function showProtocolliMessage(message, isError = false) {
+    const errorDiv = document.getElementById('protocolliError');
+    const successDiv = document.getElementById('protocolliSuccess');
+
+    if (isError) {
+        errorDiv.innerHTML = message;
+        errorDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        // Auto-hide dopo 8 secondi
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 8000);
+    } else {
+        successDiv.innerHTML = message;
+        successDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
+        // Auto-hide dopo 5 secondi
+        setTimeout(() => {
+            successDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
 // CARICA PROTOCOLLI SOSPESI
 function loadProtocolliSospesi() {
     const contentDiv = document.getElementById('protocolliContent');
@@ -120,18 +144,16 @@ function deleteProtocolliByEnte(ente) {
         .then(data => {
             loadingDiv.style.display = 'none';
             if (data.success) {
-                alert(`✅ ${data.message}`);
+                showProtocolliMessage(`✅ ${data.message}`);
                 // Ricarica i dati
                 loadProtocolliSospesi();
             } else {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `❌ Errore: ${data.message}`;
+                showProtocolliMessage(`❌ Errore: ${data.message}`, true);
             }
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            errorDiv.style.display = 'block';
-            errorDiv.innerHTML = `❌ Errore nella comunicazione: ${error.message}`;
+            showProtocolliMessage(`❌ Errore nella comunicazione: ${error.message}`, true);
             console.error('Errore:', error);
         });
 }
@@ -185,16 +207,18 @@ function doCommit() {
     fetchAPI('/salvavita/api/commit-transaction', 'POST')
         .then(data => {
             if (data.success) {
-                alert(`✅ ${data.message}`);
                 closeTransactionModal();
+                showProtocolliMessage(`✅ ${data.message}`);
                 // Ricarica i dati
                 loadProtocolliSospesi();
             } else {
-                alert(`❌ Errore: ${data.message}`);
+                closeTransactionModal();
+                showProtocolliMessage(`❌ Errore: ${data.message}`, true);
             }
         })
         .catch(error => {
-            alert(`❌ Errore: ${error.message}`);
+            closeTransactionModal();
+            showProtocolliMessage(`❌ Errore: ${error.message}`, true);
         });
 }
 
@@ -203,14 +227,17 @@ function doRollback() {
     fetchAPI('/salvavita/api/rollback-transaction', 'POST')
         .then(data => {
             if (data.success) {
-                alert(`✅ ${data.message}`);
                 closeTransactionModal();
+                showProtocolliMessage(`✅ ${data.message}`);
+                loadProtocolliSospesi();
             } else {
-                alert(`❌ Errore: ${data.message}`);
+                closeTransactionModal();
+                showProtocolliMessage(`❌ Errore: ${data.message}`, true);
             }
         })
         .catch(error => {
-            alert(`❌ Errore: ${error.message}`);
+            closeTransactionModal();
+            showProtocolliMessage(`❌ Errore: ${error.message}`, true);
         });
 }
 

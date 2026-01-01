@@ -507,6 +507,9 @@ public class OracleService {
 
             logger.info("Cancellazione protocollo temporaneo {} - {} record interessati", sequLongId, total);
 
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK (come deleteSchedulingData)
+            TransactionService.saveConnection(conn);
+
             result.put("success", true);
             result.put("message", "Cancellazione in sospeso - In attesa di Commit/Rollback");
             result.put("recordsAffected", total);
@@ -514,13 +517,12 @@ public class OracleService {
             result.put("ente", nomeEnte);
             result.put("sequLongId", sequLongId);
 
-            // NON fare commit, rimane in sospeso
-            conn.setAutoCommit(true);
-
         } catch (Exception e) {
             if (conn != null) {
                 try {
                     conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
                 } catch (Exception ex) {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
@@ -529,7 +531,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, conn);
+            closeResources(null, stmt, null); // NON chiudere la connessione
         }
 
         return result;
