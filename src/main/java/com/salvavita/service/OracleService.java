@@ -1,6 +1,8 @@
 package com.salvavita.service;
 
+import com.salvavita.model.AllineamentoProcesso;
 import com.salvavita.model.BuchiProtocollo;
+import com.salvavita.model.DemoneMailSender;
 import com.salvavita.model.ProtocolliSospesi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,6 +220,157 @@ public class OracleService {
             throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
         } finally {
             closeResources(rs, stmt, conn);
+        }
+
+        return result;
+    }
+
+    /**
+     * Esegue la query ALLINEAMENTI PROCESSI
+     */
+    public List<AllineamentoProcesso> getAllineamentiProcessi() throws Exception {
+        List<AllineamentoProcesso> result = new ArrayList<>();
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            String query = "SELECT count(*), 'Allineamenti_in_errore' " +
+                          "FROM sesamo.allineamenti al " +
+                          "WHERE al.data_inizio_exe>sysdate-1 AND al.errore_exe IS NOT NULL AND al.id_demone NOT IN (9,10) " +
+                          "UNION ALL " +
+                          "SELECT 28-count(*), 'allineamenti_Non_Schedulati' " +
+                          "FROM (SELECT DISTINCT al.id_demone, al.id_ente FROM sesamo.allineamenti al " +
+                          "WHERE al.data_inizio_exe>sysdate-1 AND al.id_demone NOT IN (3,6,8,9,10))";
+
+            logger.info("Esecuzione query ALLINEAMENTI PROCESSI");
+            rs = stmt.executeQuery(query);
+
+            while (rs.next()) {
+                AllineamentoProcesso ap = new AllineamentoProcesso();
+                ap.setCount(rs.getInt(1));
+                ap.setTipo(rs.getString(2));
+                result.add(ap);
+            }
+
+            logger.info("Query eseguita: {} record trovati", result.size());
+
+        } catch (Exception e) {
+            logger.error("Errore nell'esecuzione della query ALLINEAMENTI PROCESSI: {}", e.getMessage(), e);
+            throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
+        } finally {
+            closeResources(rs, stmt, conn);
+        }
+
+        return result;
+    }
+
+    /**
+     * Esegue la query DEMONE MAIL SENDER SOGEI
+     */
+    public DemoneMailSender getDemoneMailSenderSogei() throws Exception {
+        return getDemoneMailSender("sogei_asp", "EJBMAILSENDER SOGEI");
+    }
+
+    /**
+     * Esegue la query DEMONE MAIL SENDER ENTRATE
+     */
+    public DemoneMailSender getDemoneMailSenderEntrate() throws Exception {
+        return getDemoneMailSender("entr_asp", "EJBMAILSENDER ENTRATE");
+    }
+
+    /**
+     * Metodo helper per query demone mail sender
+     */
+    private DemoneMailSender getDemoneMailSender(String schema, String ente) throws Exception {
+        DemoneMailSender result = null;
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            String query = "SELECT '" + ente + "', d.codi_nome, d.is_working, d.date_start_working, d.date_stop_working " +
+                          "FROM " + schema + ".d_demoni d " +
+                          "WHERE codi_nome='EjbProtocolloMailSender'";
+
+            logger.info("Esecuzione query DEMONE MAIL SENDER per {}", schema);
+            rs = stmt.executeQuery(query);
+
+            if (rs.next()) {
+                result = new DemoneMailSender();
+                result.setEnte(rs.getString(1));
+                result.setCodiNome(rs.getString(2));
+                result.setIsWorking(rs.getInt(3));
+
+                Timestamp tsStart = rs.getTimestamp(4);
+                if (tsStart != null) {
+                    result.setDateStartWorking(tsStart.toLocalDateTime());
+                }
+
+                Timestamp tsStop = rs.getTimestamp(5);
+                if (tsStop != null) {
+                    result.setDateStopWorking(tsStop.toLocalDateTime());
+                }
+            }
+
+            logger.info("Query eseguita per {}", schema);
+
+        } catch (Exception e) {
+            logger.error("Errore nell'esecuzione della query DEMONE MAIL SENDER {}: {}", schema, e.getMessage(), e);
+            throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
+        } finally {
+            closeResources(rs, stmt, conn);
+        }
+
+        return result;
+    }
+
+    /**
+     * Riavvia il demone mail sender per uno schema specifico
+     */
+    public Map<String, Object> riavviaDemoneMailSender(String schema) throws Exception {
+        Connection conn = null;
+        Statement stmt = null;
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            logger.info("Riavvio demone mail sender per {}", schema);
+
+            String updateQuery = "UPDATE " + schema + ".d_demoni d " +
+                                "SET d.is_working=0 " +
+                                "WHERE codi_nome='EjbProtocolloMailSender'";
+
+            int rowsAffected = stmt.executeUpdate(updateQuery);
+            conn.commit();
+
+            logger.info("Demone mail sender riavviato per {} - {} record aggiornati", schema, rowsAffected);
+
+            result.put("success", true);
+            result.put("message", "Demone riavviato con successo per " + schema);
+            result.put("rowsAffected", rowsAffected);
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (Exception ex) {
+                    logger.error("Errore nel rollback: {}", ex.getMessage());
+                }
+            }
+            logger.error("Errore nel riavvio del demone mail sender {}: {}", schema, e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Errore: " + e.getMessage());
+        } finally {
+            closeResources(null, stmt, conn);
         }
 
         return result;

@@ -99,6 +99,102 @@ public class QueryController {
     }
 
     /**
+     * GET /api/allineamenti-processi
+     * Restituisce controllo allineamenti processi
+     */
+    @GetMapping("/allineamenti-processi")
+    public ResponseEntity<?> getAllineamentiProcessi() {
+        try {
+            logger.info("Richiesta GET /allineamenti-processi");
+            List<com.salvavita.model.AllineamentoProcesso> data = oracleService.getAllineamentiProcessi();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("totalRecords", data.size());
+            response.put("data", data);
+
+            logger.info("Risposta: {} record trovati", data.size());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/demone-mail-sender/sogei
+     * Restituisce stato demone mail sender SOGEI
+     */
+    @GetMapping("/demone-mail-sender/sogei")
+    public ResponseEntity<?> getDemoneMailSenderSogei() {
+        try {
+            logger.info("Richiesta GET /demone-mail-sender/sogei");
+            com.salvavita.model.DemoneMailSender data = oracleService.getDemoneMailSenderSogei();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/demone-mail-sender/entrate
+     * Restituisce stato demone mail sender ENTRATE
+     */
+    @GetMapping("/demone-mail-sender/entrate")
+    public ResponseEntity<?> getDemoneMailSenderEntrate() {
+        try {
+            logger.info("Richiesta GET /demone-mail-sender/entrate");
+            com.salvavita.model.DemoneMailSender data = oracleService.getDemoneMailSenderEntrate();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/riavvia-demone-mail-sender
+     * Riavvia il demone mail sender per uno schema specifico
+     */
+    @PostMapping("/riavvia-demone-mail-sender")
+    public ResponseEntity<?> riavviaDemoneMailSender(@RequestParam String schema) {
+        try {
+            logger.info("Richiesta POST /riavvia-demone-mail-sender per schema: {}", schema);
+
+            // Validazione schema
+            if (!schema.equals("sogei_asp") && !schema.equals("entr_asp")) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Schema non valido", "Schema deve essere 'sogei_asp' o 'entr_asp'"));
+            }
+
+            Map<String, Object> result = oracleService.riavviaDemoneMailSender(schema);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.error("Errore nel riavvio del demone: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nel riavvio", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/health
      * Verifica la connessione al database
      */
