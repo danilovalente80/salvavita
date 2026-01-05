@@ -74,6 +74,31 @@ public class QueryController {
     }
 
     /**
+     * GET /api/buchi-protocollo
+     * Restituisce lista di buchi di protocollo
+     */
+    @GetMapping("/buchi-protocollo")
+    public ResponseEntity<?> getBuchiProtocollo() {
+        try {
+            logger.info("Richiesta GET /buchi-protocollo");
+            List<com.salvavita.model.BuchiProtocollo> data = oracleService.getBuchiProtocollo();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("totalRecords", data.size());
+            response.put("data", data);
+
+            logger.info("Risposta: {} record trovati", data.size());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/health
      * Verifica la connessione al database
      */

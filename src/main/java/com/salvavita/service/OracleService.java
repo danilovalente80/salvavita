@@ -1,5 +1,6 @@
 package com.salvavita.service;
 
+import com.salvavita.model.BuchiProtocollo;
 import com.salvavita.model.ProtocolliSospesi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,6 +156,65 @@ public class OracleService {
 
         } catch (Exception e) {
             logger.error("Errore nell'esecuzione della query sched_arcipelago_task: {}", e.getMessage(), e);
+            throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
+        } finally {
+            closeResources(rs, stmt, conn);
+        }
+
+        return result;
+    }
+
+    /**
+     * Esegue la query BUCHI DI PROTOCOLLO
+     */
+    public List<BuchiProtocollo> getBuchiProtocollo() throws Exception {
+        List<BuchiProtocollo> result = new ArrayList<>();
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            String query = buildQueryBuchiProtocollo();
+            logger.info("Esecuzione query BUCHI DI PROTOCOLLO");
+
+            rs = stmt.executeQuery(query);
+
+            while (rs.next()) {
+                BuchiProtocollo bp = new BuchiProtocollo();
+                bp.setEnte(rs.getString(1));
+                bp.setCount(rs.getInt(2));
+                bp.setErrore(rs.getString(3));
+                bp.setMinId(rs.getLong(4));
+                bp.setNumeroProtocollo(rs.getString(5));
+
+                // ID_AOO può essere null
+                long idAoo = rs.getLong(6);
+                if (!rs.wasNull()) {
+                    bp.setIdAoo(idAoo);
+                }
+
+                bp.setCodiceAoo(rs.getString(7));
+
+                Timestamp minTs = rs.getTimestamp(8);
+                if (minTs != null) {
+                    bp.setMinDataIns(minTs.toLocalDateTime());
+                }
+
+                Timestamp maxTs = rs.getTimestamp(9);
+                if (maxTs != null) {
+                    bp.setMaxDataIns(maxTs.toLocalDateTime());
+                }
+
+                result.add(bp);
+            }
+
+            logger.info("Query eseguita: {} record trovati", result.size());
+
+        } catch (Exception e) {
+            logger.error("Errore nell'esecuzione della query BUCHI DI PROTOCOLLO: {}", e.getMessage(), e);
             throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
         } finally {
             closeResources(rs, stmt, conn);
@@ -401,6 +461,66 @@ public class OracleService {
                "AND NOT EXISTS (SELECT 1 FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
                "AND pt.data_inserimento > TO_DATE('27/02/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "ORDER BY 1, 2";
+    }
+
+    /**
+     * Costruisce la query BUCHI DI PROTOCOLLO con UNION di tutti gli schemi
+     */
+    private String buildQueryBuchiProtocollo() {
+        return "SELECT 'SOGEI', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM sogei_asp.p2_protocollo p2 " +
+               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL AND p2.errore IS NOT NULL " +
+               "AND p2.data_ins>to_date('04/06/2024 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
+               "AND (SELECT count(*) FROM sogei_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
+               "UNION " +
+               "SELECT 'CONSIP', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM consip_asp.p2_protocollo p2 " +
+               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL AND p2.errore IS NOT NULL " +
+               "AND p2.data_ins>to_date('04/06/2024 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
+               "AND (SELECT count(*) FROM consip_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
+               "UNION " +
+               "SELECT 'DEMANIO', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM dem_asp.p2_protocollo p2 " +
+               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL AND p2.errore IS NOT NULL " +
+               "AND p2.data_ins>to_date('04/06/2024 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
+               "AND (SELECT count(*) FROM dem_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
+               "UNION " +
+               "SELECT 'ACN', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM acn_asp.p2_protocollo p2 " +
+               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
+               "AND (SELECT count(*) FROM acn_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
+               "UNION " +
+               "SELECT 'AAMS', count(*), substr(errore,0,400), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM aams_asp.p2_protocollo p2 " +
+               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
+               "AND (SELECT count(*) FROM aams_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,0,400), numero_protocollo, id_aoo, codice_aoo " +
+               "UNION " +
+               "SELECT 'EQUI', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM equi_asp.p2_protocollo p2 " +
+               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
+               "AND p2.data_ins>to_date('01/01/2025 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
+               "AND (SELECT count(*) FROM equi_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
+               "UNION " +
+               "SELECT 'ENTRATE', count(*), substr(errore,10,400), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
+               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
+               "FROM entr_asp.p2_protocollo p2 " +
+               "WHERE p2.codice_aoo NOT IN ('DPTEST') AND p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
+               "AND p2.errore IS NOT NULL AND p2.data_ins>to_date('25/11/2025 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
+               "AND (SELECT count(*) FROM entr_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
+               ") GROUP BY substr(errore,10,400), numero_protocollo, id_aoo, codice_aoo " +
+               "ORDER BY 1,3,4";
     }
 
     /**

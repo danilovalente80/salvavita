@@ -402,6 +402,7 @@
     <!-- SCRIPT SPECIFICI DEI PANNELLI -->
     <script src="js/protocolli.js"></script>
     <script src="js/tasks.js"></script>
+    <script src="js/buchi.js"></script>
 
     <script>
         // Carica i pannelli al page load
@@ -415,7 +416,8 @@
             const container = document.getElementById('panelsContainer');
             const panels = [
                 { url: 'panels/protocolli-sospesi.html', id: 'protocolli-panel' },
-                { url: 'panels/task-schedulati.html', id: 'tasks-panel' }
+                { url: 'panels/task-schedulati.html', id: 'tasks-panel' },
+                { url: 'panels/buchi-protocollo.html', id: 'buchi-panel' }
             ];
 
             panels.forEach((panel, index) => {
