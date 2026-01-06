@@ -226,6 +226,112 @@ public class OracleService {
     }
 
     /**
+     * Esegue tutte le query per il controllo processi con una SINGOLA connessione
+     * per evitare ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit
+     */
+    public Map<String, Object> getControlloProcessiCompleto() throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            // UNA SOLA CONNESSIONE per tutte le query
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            logger.info("Esecuzione query CONTROLLO PROCESSI COMPLETO (1 connessione)");
+
+            // 1. Query Allineamenti
+            List<AllineamentoProcesso> allineamenti = new ArrayList<>();
+            String queryAllineamenti = "SELECT count(*), 'Allineamenti_in_errore' " +
+                          "FROM sesamo.allineamenti al " +
+                          "WHERE al.data_inizio_exe>sysdate-1 AND al.errore_exe IS NOT NULL AND al.id_demone NOT IN (9,10) " +
+                          "UNION ALL " +
+                          "SELECT 28-count(*), 'allineamenti_Non_Schedulati' " +
+                          "FROM (SELECT DISTINCT al.id_demone, al.id_ente FROM sesamo.allineamenti al " +
+                          "WHERE al.data_inizio_exe>sysdate-1 AND al.id_demone NOT IN (3,6,8,9,10))";
+
+            rs = stmt.executeQuery(queryAllineamenti);
+            while (rs.next()) {
+                AllineamentoProcesso ap = new AllineamentoProcesso();
+                ap.setCount(rs.getInt(1));
+                ap.setTipo(rs.getString(2));
+                allineamenti.add(ap);
+            }
+            rs.close();
+            logger.info("Query allineamenti completata: {} record", allineamenti.size());
+
+            // 2. Query Demone SOGEI
+            DemoneMailSender demoneSogei = null;
+            String querySogei = "SELECT 'EJBMAILSENDER SOGEI', d.codi_nome, d.is_working, d.date_start_working, d.date_stop_working " +
+                          "FROM sogei_asp.d_demoni d " +
+                          "WHERE codi_nome='EjbProtocolloMailSender'";
+
+            rs = stmt.executeQuery(querySogei);
+            if (rs.next()) {
+                demoneSogei = new DemoneMailSender();
+                demoneSogei.setEnte(rs.getString(1));
+                demoneSogei.setCodiNome(rs.getString(2));
+                demoneSogei.setIsWorking(rs.getInt(3));
+
+                Timestamp tsStart = rs.getTimestamp(4);
+                if (tsStart != null) {
+                    demoneSogei.setDateStartWorking(tsStart.toLocalDateTime());
+                }
+
+                Timestamp tsStop = rs.getTimestamp(5);
+                if (tsStop != null) {
+                    demoneSogei.setDateStopWorking(tsStop.toLocalDateTime());
+                }
+            }
+            rs.close();
+            logger.info("Query demone SOGEI completata");
+
+            // 3. Query Demone ENTRATE
+            DemoneMailSender demoneEntrate = null;
+            String queryEntrate = "SELECT 'EJBMAILSENDER ENTRATE', d.codi_nome, d.is_working, d.date_start_working, d.date_stop_working " +
+                          "FROM entr_asp.d_demoni d " +
+                          "WHERE codi_nome='EjbProtocolloMailSender'";
+
+            rs = stmt.executeQuery(queryEntrate);
+            if (rs.next()) {
+                demoneEntrate = new DemoneMailSender();
+                demoneEntrate.setEnte(rs.getString(1));
+                demoneEntrate.setCodiNome(rs.getString(2));
+                demoneEntrate.setIsWorking(rs.getInt(3));
+
+                Timestamp tsStart = rs.getTimestamp(4);
+                if (tsStart != null) {
+                    demoneEntrate.setDateStartWorking(tsStart.toLocalDateTime());
+                }
+
+                Timestamp tsStop = rs.getTimestamp(5);
+                if (tsStop != null) {
+                    demoneEntrate.setDateStopWorking(tsStop.toLocalDateTime());
+                }
+            }
+            rs.close();
+            logger.info("Query demone ENTRATE completata");
+
+            // Costruisci risultato
+            result.put("success", true);
+            result.put("allineamenti", allineamenti);
+            result.put("demoneSogei", demoneSogei);
+            result.put("demoneEntrate", demoneEntrate);
+
+        } catch (Exception e) {
+            logger.error("Errore nell'esecuzione delle query CONTROLLO PROCESSI: {}", e.getMessage(), e);
+            throw new Exception("Errore nell'esecuzione delle query: " + e.getMessage(), e);
+        } finally {
+            // Chiudi TUTTO inclusa la connessione
+            closeResources(rs, stmt, conn);
+        }
+
+        return result;
+    }
+
+    /**
      * Esegue la query ALLINEAMENTI PROCESSI
      */
     public List<AllineamentoProcesso> getAllineamentiProcessi() throws Exception {

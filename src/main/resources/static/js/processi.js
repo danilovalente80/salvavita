@@ -32,46 +32,47 @@ function loadControlloProcessi() {
     contentDiv.style.display = 'none';
     loadingDiv.style.display = 'block';
 
-    // Carica tutti i dati in parallelo
-    Promise.all([
-        fetchAPI('/salvavita/api/allineamenti-processi'),
-        fetchAPI('/salvavita/api/demone-mail-sender/sogei'),
-        fetchAPI('/salvavita/api/demone-mail-sender/entrate')
-    ])
-    .then(([allineamenti, demoneSogei, demoneEntrate]) => {
-        loadingDiv.style.display = 'none';
+    // UNA SOLA CHIAMATA che esegue tutte le query con una connessione
+    // Risolve: ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit
+    fetchAPI('/salvavita/api/controllo-processi')
+        .then(data => {
+            loadingDiv.style.display = 'none';
 
-        let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
+            if (data.success) {
+                let html = '<div style="display: flex; flex-direction: column; gap: 20px;">';
 
-        // Sezione Allineamenti
-        html += buildAllineamentiSection(allineamenti);
+                // Sezione Allineamenti
+                html += buildAllineamentiSection(data.allineamenti);
 
-        // Sezione Demoni
-        html += buildDemoniSection(demoneSogei, demoneEntrate);
+                // Sezione Demoni
+                html += buildDemoniSection(data.demoneSogei, data.demoneEntrate);
 
-        html += '</div>';
-        contentDiv.innerHTML = html;
-        contentDiv.style.display = 'block';
+                html += '</div>';
+                contentDiv.innerHTML = html;
+                contentDiv.style.display = 'block';
 
-        showProcessiMessage('✓ Dati caricati con successo');
-    })
-    .catch(error => {
-        loadingDiv.style.display = 'none';
-        showProcessiMessage('❌ Errore: ' + error.message, true);
-    });
+                showProcessiMessage('✓ Dati caricati con successo');
+            } else {
+                showProcessiMessage('❌ Errore: ' + (data.message || 'Errore sconosciuto'), true);
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            showProcessiMessage('❌ Errore: ' + error.message, true);
+        });
 }
 
 // COSTRUISCI SEZIONE ALLINEAMENTI
-function buildAllineamentiSection(response) {
+function buildAllineamentiSection(allineamenti) {
     let html = '<div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">';
     html += '<h3 style="margin-bottom: 10px;">📊 Allineamenti Processi</h3>';
 
-    if (response.success && response.data) {
+    if (allineamenti && allineamenti.length > 0) {
         html += '<table style="width: 100%;"><thead><tr>';
         html += '<th>Count</th><th>Tipo</th><th>Stato</th>';
         html += '</tr></thead><tbody>';
 
-        response.data.forEach(row => {
+        allineamenti.forEach(row => {
             let statusClass = '';
             let statusMsg = '';
 
@@ -111,13 +112,13 @@ function buildDemoniSection(demoneSogei, demoneEntrate) {
     html += '</tr></thead><tbody>';
 
     // SOGEI
-    if (demoneSogei.success && demoneSogei.data) {
-        html += buildDemoneRow(demoneSogei.data, 'sogei_asp');
+    if (demoneSogei) {
+        html += buildDemoneRow(demoneSogei, 'sogei_asp');
     }
 
     // ENTRATE
-    if (demoneEntrate.success && demoneEntrate.data) {
-        html += buildDemoneRow(demoneEntrate.data, 'entr_asp');
+    if (demoneEntrate) {
+        html += buildDemoneRow(demoneEntrate, 'entr_asp');
     }
 
     html += '</tbody></table>';

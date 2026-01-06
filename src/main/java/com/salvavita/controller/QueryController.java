@@ -99,6 +99,27 @@ public class QueryController {
     }
 
     /**
+     * GET /api/controllo-processi
+     * Restituisce TUTTE le query di controllo processi con UNA SOLA connessione
+     * (risolve ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit)
+     */
+    @GetMapping("/controllo-processi")
+    public ResponseEntity<?> getControlloProcessi() {
+        try {
+            logger.info("Richiesta GET /controllo-processi (endpoint unificato)");
+            Map<String, Object> result = oracleService.getControlloProcessiCompleto();
+
+            logger.info("Risposta: controllo processi completato");
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione delle query", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/allineamenti-processi
      * Restituisce controllo allineamenti processi
      */
