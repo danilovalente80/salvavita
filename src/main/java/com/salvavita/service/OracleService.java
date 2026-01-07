@@ -917,7 +917,7 @@ public class OracleService {
     }
 
     /**
-     * Lancia le URL dei task in background
+     * Lancia le URL dei task in background con delay di 5 secondi tra una e l'altra
      */
     public void launchTaskUrls() {
         // ⚠️ DISABILITA VERIFICA SSL (solo per development/testing)
@@ -934,26 +934,40 @@ public class OracleService {
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
         };
 
-        logger.info("Lancio {} URL di task in background", urls.length);
+        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
 
-        // Esegui ogni URL in un thread separato (background)
-        for (String url : urls) {
-            new Thread(() -> {
+        // Esegui tutte le URL in un SINGOLO thread per lanciarle SEQUENZIALMENTE
+        new Thread(() -> {
+            for (int i = 0; i < urls.length; i++) {
+                String url = urls[i];
                 try {
-                    logger.info("Richiamando URL in background: {}", url);
+                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
                     java.net.URL urlObj = new java.net.URL(url);
                     HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
                     conn.setRequestMethod("GET");
                     conn.setConnectTimeout(10000);
                     conn.setReadTimeout(10000);
                     int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta da {}: HTTP {}", url, responseCode);
+                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
                     conn.disconnect();
+
+                    // DELAY di 5 secondi prima della prossima URL (tranne dopo l'ultima)
+                    if (i < urls.length - 1) {
+                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
+                        Thread.sleep(5000); // 5000 ms = 5 secondi
+                    }
+
+                } catch (InterruptedException e) {
+                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
+                    Thread.currentThread().interrupt();
+                    break;
                 } catch (Exception e) {
                     logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
+                    // Continua con la prossima URL anche in caso di errore
                 }
-            }).start();
-        }
+            }
+            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
+        }).start();
     }
 
     /**
