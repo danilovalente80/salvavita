@@ -313,6 +313,23 @@ public class QueryController {
     }
 
     /**
+     * POST /api/execute-various-operations
+     * Esegue operazioni INSERT/UPDATE/DELETE varie senza autocommit
+     */
+    @PostMapping("/execute-various-operations")
+    public ResponseEntity<?> executeVariousOperations() {
+        try {
+            logger.info("Richiesta POST /execute-various-operations");
+            Map<String, Object> result = oracleService.executeVariousOperations();
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("Errore nell'esecuzione delle operazioni varie: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione", e.getMessage()));
+        }
+    }
+
+    /**
      * POST /api/commit-transaction
      * Esegui il commit di tutte le operazioni in sospeso
      */

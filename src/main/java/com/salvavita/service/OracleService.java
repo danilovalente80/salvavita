@@ -917,6 +917,83 @@ public class OracleService {
     }
 
     /**
+     * Esegue operazioni varie INSERT/UPDATE/DELETE senza autocommit
+     * Restituisce il numero di record impattati per ogni operazione
+     */
+    public Map<String, Object> executeVariousOperations() throws Exception {
+        Connection conn = null;
+        Statement stmt = null;
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> operations = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            logger.info("Inizio esecuzione operazioni varie (senza autocommit)");
+
+            // Query 1: BACKUP ACN - INSERT UTENTI_UFFICI
+            String query1 = "INSERT INTO sesamo.utenti_uffici_bck (id_utente,id_ufficio,data_inizio,data_fine,flg_usr_vir,flag_prot_reg,flag_prot_out,flag_default,flag_prot_in,bozza_flg) " +
+                           "SELECT suu.id_utente,suu.id_ufficio,suu.data_inizio,suu.data_fine,suu.flg_usr_vir,suu.flag_prot_reg,suu.flag_prot_out,suu.flag_default,suu.flag_prot_in, " +
+                           "to_number(to_char(sysdate,'yyyymmddhh24miss')) " +
+                           "FROM sesamo.utenti_uffici suu, sesamo.uffici suf " +
+                           "WHERE suu.id_ufficio=suf.id_ufficio AND suf.id_ente=15";
+
+            int rows1 = stmt.executeUpdate(query1);
+            Map<String, Object> op1 = new HashMap<>();
+            op1.put("label", "BACKUP ACN: INSERT UTENTI_UFFICI");
+            op1.put("recordsAffected", rows1);
+            operations.add(op1);
+            logger.info("Query 1 completata: {} record", rows1);
+
+            // Query 2: BACKUP ACN - INSERT UTENTI_RUOLI_APP
+            String query2 = "INSERT INTO sesamo.utenti_ruoli_applic_appo (id_ruolo_app,id_utente,id_ente,id_aoo,id_utente_ass,data_inizio,id_utente_fine_ass,data_fine,id_ufficio,flag_default,bozza_flg) " +
+                           "SELECT id_ruolo_app,id_utente,id_ente,id_aoo,id_utente_ass,data_inizio,id_utente_fine_ass,data_fine,id_ufficio,flag_default,to_number(to_char(sysdate,'yyyymmddhh24miss')) " +
+                           "FROM sesamo.utenti_ruoli_applicativi uro " +
+                           "WHERE uro.id_ente=15";
+
+            int rows2 = stmt.executeUpdate(query2);
+            Map<String, Object> op2 = new HashMap<>();
+            op2.put("label", "BACKUP ACN: INSERT UTENTI_RUOLI_APP");
+            op2.put("recordsAffected", rows2);
+            operations.add(op2);
+            logger.info("Query 2 completata: {} record", rows2);
+
+            int totalRecords = rows1 + rows2;
+            logger.info("Operazioni completate - Totale {} record interessati", totalRecords);
+
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            TransactionService.saveConnection(conn);
+
+            result.put("success", true);
+            result.put("message", "Operazioni in sospeso - In attesa di Commit/Rollback");
+            result.put("totalRecords", totalRecords);
+            result.put("operations", operations);
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (Exception ex) {
+                    logger.error("Errore nel rollback: {}", ex.getMessage());
+                }
+            }
+            logger.error("Errore nell'esecuzione delle operazioni varie: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Errore: " + e.getMessage());
+        } finally {
+            closeResources(null, stmt, null); // NON chiudere la connessione
+        }
+
+        return result;
+    }
+
+    /**
      * Lancia le URL dei task in background con delay di 5 secondi tra una e l'altra
      */
     public void launchTaskUrls() {
