@@ -449,25 +449,33 @@ public class OracleService {
             conn = getConnection();
             stmt = conn.createStatement();
 
-            logger.info("Riavvio demone mail sender per {}", schema);
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            logger.info("Riavvio demone mail sender per {} (SENZA AUTOCOMMIT)", schema);
 
             String updateQuery = "UPDATE " + schema + ".d_demoni d " +
                                 "SET d.is_working=0 " +
                                 "WHERE codi_nome='EjbProtocolloMailSender'";
 
             int rowsAffected = stmt.executeUpdate(updateQuery);
-            conn.commit();
 
-            logger.info("Demone mail sender riavviato per {} - {} record aggiornati", schema, rowsAffected);
+            logger.info("Demone mail sender riavviato per {} - {} record aggiornati - In attesa di COMMIT", schema, rowsAffected);
+
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            TransactionService.saveConnection(conn);
 
             result.put("success", true);
-            result.put("message", "Demone riavviato con successo per " + schema);
+            result.put("message", "Riavvio demone in sospeso - In attesa di Commit/Rollback");
             result.put("rowsAffected", rowsAffected);
+            result.put("schema", schema);
 
         } catch (Exception e) {
             if (conn != null) {
                 try {
                     conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
                 } catch (Exception ex) {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
@@ -476,7 +484,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, conn);
+            closeResources(null, stmt, null); // NON chiudere la connessione
         }
 
         return result;
@@ -537,11 +545,13 @@ public class OracleService {
     }
 
     /**
-     * Cancella i protocolli in transizione per uno specifico ente
+     * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTOCOMMIT)
      */
-    public void deleteProtocolliInTransizione(String nomeEnte) throws Exception {
+    public Map<String, Object> deleteProtocolliInTransizione(String nomeEnte) throws Exception {
         Connection conn = null;
         Statement stmt = null;
+        Map<String, Object> result = new HashMap<>();
+        int totalRecords = 0;
 
         try {
             com.salvavita.model.Ente ente = com.salvavita.model.Ente.fromNome(nomeEnte);
@@ -553,7 +563,10 @@ public class OracleService {
             conn = getConnection();
             stmt = conn.createStatement();
 
-            logger.info("Inizio cancellazione protocolli in transizione per ente: {}", nomeEnte);
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            logger.info("Inizio cancellazione protocolli in transizione per ente: {} (SENZA AUTOCOMMIT)", nomeEnte);
 
             // Impostare lo schema corrente
             stmt.executeUpdate("ALTER SESSION SET CURRENT_SCHEMA=" + schema);
@@ -567,47 +580,61 @@ public class OracleService {
                     "WHERE p.id_transizione=to_char(pt.sequ_long_id))>0";
 
             // Delete statements
-            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_collegati pc " +
+            int rows1 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_collegati pc " +
                     "WHERE pc.fk_protocollo IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_documenti " +
+            int rows2 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_documenti " +
                     "WHERE fk_protocollo IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_mitt_dest " +
+            int rows3 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_mitt_dest " +
                     "WHERE fk_protocollo IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            stmt.executeUpdate("DELETE FROM " + schema + ".p2_chiusura_attivita_risposta " +
+            int rows4 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_chiusura_attivita_risposta " +
                     "WHERE fk_p2_proto IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo p2 " +
+            int rows5 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10");
 
-            conn.commit();
+            totalRecords = rows1 + rows2 + rows3 + rows4 + rows5;
 
-            logger.info("Cancellazione protocolli in transizione per ente {} completata", nomeEnte);
+            logger.info("Cancellazione protocolli in transizione per ente {} - {} record interessati - In attesa di COMMIT", nomeEnte, totalRecords);
+
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            TransactionService.saveConnection(conn);
+
+            result.put("success", true);
+            result.put("message", "Cancellazione in sospeso - In attesa di Commit/Rollback");
+            result.put("recordsAffected", totalRecords);
+            result.put("queries", 5);
+            result.put("ente", nomeEnte);
 
         } catch (Exception e) {
             if (conn != null) {
                 try {
                     conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
                 } catch (Exception ex) {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
             }
             logger.error("Errore nella cancellazione dei protocolli: {}", e.getMessage(), e);
-            throw new Exception("Errore nella cancellazione: " + e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, conn);
+            closeResources(null, stmt, null); // NON chiudere la connessione
         }
+
+        return result;
     }
 
     /**

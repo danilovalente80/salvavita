@@ -274,20 +274,15 @@ public class QueryController {
 
     /**
      * POST /api/delete-protocolli
-     * Cancella i protocolli in transizione per uno specifico ente
+     * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTO-COMMIT)
      */
     @PostMapping("/delete-protocolli")
     public ResponseEntity<?> deleteProtocolli(@RequestParam String ente) {
         try {
             logger.info("Richiesta POST /delete-protocolli per ente: {}", ente);
-            oracleService.deleteProtocolliInTransizione(ente);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Protocolli in transizione eliminati per ente: " + ente);
-            
-            return ResponseEntity.ok(response);
-            
+            Map<String, Object> result = oracleService.deleteProtocolliInTransizione(ente);
+            return ResponseEntity.ok(result);
+
         } catch (Exception e) {
             logger.error("Errore nell'eliminazione dei protocolli: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

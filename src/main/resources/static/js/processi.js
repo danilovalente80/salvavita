@@ -156,9 +156,8 @@ function riavviaDemone(schema, ente) {
         .then(data => {
             loadingDiv.style.display = 'none';
             if (data.success) {
-                showProcessiMessage(`✅ ${data.message}`);
-                // Ricarica i dati
-                loadControlloProcessi();
+                // Mostra popup con riepilogo e pulsanti commit/rollback
+                showRiavviaDemoneModal(data);
             } else {
                 showProcessiMessage(`❌ Errore: ${data.message}`, true);
             }
@@ -166,5 +165,116 @@ function riavviaDemone(schema, ente) {
         .catch(error => {
             loadingDiv.style.display = 'none';
             showProcessiMessage(`❌ Errore: ${error.message}`, true);
+        });
+}
+
+// MOSTRA POPUP PER RIAVVIO DEMONE
+function showRiavviaDemoneModal(data) {
+    // Costruisci HTML per il popup
+    let modalBody = '<div style="max-height: 400px; overflow-y: auto;">';
+    modalBody += '<h4 style="margin-bottom: 15px;">📊 Riepilogo Riavvio Demone</h4>';
+
+    modalBody += '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 15px;">';
+    modalBody += `<strong>Schema: </strong><span style="color: #667eea; font-weight: bold;">${data.schema}</span><br>`;
+    modalBody += `<strong>Record aggiornati: </strong><span style="color: #667eea; font-weight: bold; font-size: 18px;">${data.rowsAffected}</span>`;
+    modalBody += '</div>';
+
+    modalBody += '<p style="color: #f44336; font-weight: bold;">⚠️ Seleziona COMMIT per salvare i cambiamenti o ROLLBACK per annullarli</p>';
+    modalBody += '</div>';
+
+    // Crea il modal dinamicamente
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'riavviaDemoneModal';
+    modal.style.display = 'block';
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                ⚠️ Conferma Riavvio Demone
+            </div>
+            <div class="modal-body">
+                ${modalBody}
+            </div>
+            <div class="modal-footer">
+                <button class="btn-commit" onclick="doCommitFromRiavviaDemone()">✅ COMMIT</button>
+                <button class="btn-rollback" onclick="doRollbackFromRiavviaDemone()">❌ ROLLBACK</button>
+            </div>
+        </div>
+    `;
+
+    // Rimuovi modal esistente se presente
+    const existingModal = document.getElementById('riavviaDemoneModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    document.body.appendChild(modal);
+
+    // Chiudi modal cliccando fuori
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// COMMIT DA RIAVVIO DEMONE
+function doCommitFromRiavviaDemone() {
+    const modal = document.getElementById('riavviaDemoneModal');
+    const loadingDiv = document.getElementById('processiLoading');
+
+    loadingDiv.style.display = 'block';
+
+    fetchAPI('/salvavita/api/commit-transaction', 'POST')
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            if (modal) {
+                modal.remove();
+            }
+
+            if (data.success) {
+                showProcessiMessage('✅ ' + data.message);
+                loadControlloProcessi();
+            } else {
+                showProcessiMessage('❌ Errore: ' + data.message, true);
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            if (modal) {
+                modal.remove();
+            }
+            showProcessiMessage('❌ Errore: ' + error.message, true);
+        });
+}
+
+// ROLLBACK DA RIAVVIO DEMONE
+function doRollbackFromRiavviaDemone() {
+    const modal = document.getElementById('riavviaDemoneModal');
+    const loadingDiv = document.getElementById('processiLoading');
+
+    loadingDiv.style.display = 'block';
+
+    fetchAPI('/salvavita/api/rollback-transaction', 'POST')
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            if (modal) {
+                modal.remove();
+            }
+
+            if (data.success) {
+                showProcessiMessage('✅ ' + data.message);
+                loadControlloProcessi();
+            } else {
+                showProcessiMessage('❌ Errore: ' + data.message, true);
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            if (modal) {
+                modal.remove();
+            }
+            showProcessiMessage('❌ Errore: ' + error.message, true);
         });
 }
