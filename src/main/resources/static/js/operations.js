@@ -26,14 +26,12 @@ function showOperationsMessage(message, isError = false) {
 
 // ESEGUI OPERAZIONI VARIE
 function executeVariousOperations() {
-    if (!confirm('Sei sicuro di voler eseguire queste operazioni?\n\nLe query verranno eseguite senza autocommit e richiederanno COMMIT o ROLLBACK.')) {
-        return;
-    }
-
     const contentDiv = document.getElementById('operationsContent');
     const loadingDiv = document.getElementById('operationsLoading');
+    const actionsDiv = document.getElementById('operationsActions');
 
     contentDiv.style.display = 'none';
+    actionsDiv.style.display = 'none';
     loadingDiv.style.display = 'block';
 
     fetchAPI('/salvavita/api/execute-various-operations', 'POST')
@@ -41,146 +39,119 @@ function executeVariousOperations() {
             loadingDiv.style.display = 'none';
 
             if (data.success) {
-                // Mostra popup con report
-                showOperationsReport(data);
+                // Mostra i risultati inline nel pannello
+                showOperationsResultsInline(data);
 
-                contentDiv.innerHTML = '<div class="empty-state"><p>✅ Operazioni completate - In attesa di Commit/Rollback</p></div>';
                 contentDiv.style.display = 'block';
+                actionsDiv.style.display = 'block';
 
                 showOperationsMessage(`✓ ${data.operations.length} operazioni completate - ${data.totalRecords} record interessati`);
             } else {
+                contentDiv.innerHTML = '<div class="empty-state"><p>❌ Operazioni fallite</p></div>';
                 contentDiv.style.display = 'block';
                 showOperationsMessage('❌ Errore: ' + (data.message || 'Errore sconosciuto'), true);
             }
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
+            contentDiv.innerHTML = '<div class="empty-state"><p>❌ Errore di comunicazione</p></div>';
             contentDiv.style.display = 'block';
             showOperationsMessage('❌ Errore: ' + error.message, true);
         });
 }
 
-// MOSTRA POPUP CON REPORT DELLE OPERAZIONI
-function showOperationsReport(data) {
-    // Costruisci HTML per il popup
-    let modalBody = '<div style="max-height: 400px; overflow-y: auto;">';
-    modalBody += '<h4 style="margin-bottom: 15px;">📊 Report Operazioni</h4>';
+// MOSTRA RISULTATI INLINE NEL PANNELLO
+function showOperationsResultsInline(data) {
+    const contentDiv = document.getElementById('operationsContent');
+
+    let html = '<div style="padding: 15px; background: #f9f9f9; border-radius: 5px;">';
+    html += '<h3 style="margin-bottom: 15px; color: #333;">📊 Report Operazioni</h3>';
 
     // Tabella con dettagli operazioni
-    modalBody += '<table style="width: 100%; margin-bottom: 15px;"><thead><tr>';
-    modalBody += '<th style="text-align: left;">Operazione</th>';
-    modalBody += '<th style="text-align: right;">Record</th>';
-    modalBody += '</tr></thead><tbody>';
+    html += '<table style="width: 100%; margin-bottom: 15px;"><thead><tr>';
+    html += '<th style="text-align: left; padding: 10px; background: #667eea; color: white;">Operazione</th>';
+    html += '<th style="text-align: right; padding: 10px; background: #667eea; color: white;">Record Interessati</th>';
+    html += '</tr></thead><tbody>';
 
-    data.operations.forEach(op => {
-        modalBody += '<tr>';
-        modalBody += `<td>${op.label}</td>`;
-        modalBody += `<td style="text-align: right; font-weight: bold; color: #667eea;">${op.recordsAffected}</td>`;
-        modalBody += '</tr>';
+    data.operations.forEach((op, index) => {
+        const bgColor = index % 2 === 0 ? '#fff' : '#f5f5f5';
+        html += `<tr style="background: ${bgColor};">`;
+        html += `<td style="padding: 10px;">${op.label}</td>`;
+        html += `<td style="text-align: right; padding: 10px; font-weight: bold; color: #667eea;">${op.recordsAffected}</td>`;
+        html += '</tr>';
     });
 
-    modalBody += '</tbody></table>';
+    html += '</tbody></table>';
 
     // Totale
-    modalBody += '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 15px;">';
-    modalBody += `<strong>Totale record interessati: </strong>`;
-    modalBody += `<span style="color: #667eea; font-weight: bold; font-size: 18px;">${data.totalRecords}</span>`;
-    modalBody += '</div>';
+    html += '<div style="background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #2196f3;">';
+    html += `<strong style="font-size: 16px;">Totale record interessati: </strong>`;
+    html += `<span style="color: #2196f3; font-weight: bold; font-size: 20px;">${data.totalRecords}</span>`;
+    html += '</div>';
 
-    modalBody += '<p style="color: #f44336; font-weight: bold;">⚠️ Seleziona COMMIT per salvare i cambiamenti o ROLLBACK per annullarli</p>';
-    modalBody += '</div>';
+    html += '<p style="color: #f44336; font-weight: bold; margin-top: 15px; padding: 10px; background: #ffebee; border-radius: 5px;">';
+    html += '⚠️ Seleziona COMMIT per salvare i cambiamenti o ROLLBACK per annullarli';
+    html += '</p>';
 
-    // Crea il modal dinamicamente
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'operationsReportModal';
-    modal.style.display = 'block';
+    html += '</div>';
 
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                ⚠️ Conferma Operazioni
-            </div>
-            <div class="modal-body">
-                ${modalBody}
-            </div>
-            <div class="modal-footer">
-                <button class="btn-commit" onclick="doCommitFromOperations()">✅ COMMIT</button>
-                <button class="btn-rollback" onclick="doRollbackFromOperations()">❌ ROLLBACK</button>
-            </div>
-        </div>
-    `;
-
-    // Rimuovi modal esistente se presente
-    const existingModal = document.getElementById('operationsReportModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    document.body.appendChild(modal);
-
-    // Chiudi modal cliccando fuori
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.remove();
-        }
-    });
+    contentDiv.innerHTML = html;
 }
 
-// COMMIT DALLE OPERAZIONI
-function doCommitFromOperations() {
-    const modal = document.getElementById('operationsReportModal');
+// COMMIT OPERAZIONI
+function doCommitOperations() {
     const loadingDiv = document.getElementById('operationsLoading');
+    const contentDiv = document.getElementById('operationsContent');
+    const actionsDiv = document.getElementById('operationsActions');
 
     loadingDiv.style.display = 'block';
+    actionsDiv.style.display = 'none';
 
     fetchAPI('/salvavita/api/commit-transaction', 'POST')
         .then(data => {
             loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
 
             if (data.success) {
                 showOperationsMessage('✅ ' + data.message);
+                contentDiv.innerHTML = '<div class="empty-state"><p>✅ Commit completato con successo</p></div>';
+                contentDiv.style.display = 'block';
             } else {
                 showOperationsMessage('❌ Errore: ' + data.message, true);
+                actionsDiv.style.display = 'block';
             }
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
             showOperationsMessage('❌ Errore: ' + error.message, true);
+            actionsDiv.style.display = 'block';
         });
 }
 
-// ROLLBACK DALLE OPERAZIONI
-function doRollbackFromOperations() {
-    const modal = document.getElementById('operationsReportModal');
+// ROLLBACK OPERAZIONI
+function doRollbackOperations() {
     const loadingDiv = document.getElementById('operationsLoading');
+    const contentDiv = document.getElementById('operationsContent');
+    const actionsDiv = document.getElementById('operationsActions');
 
     loadingDiv.style.display = 'block';
+    actionsDiv.style.display = 'none';
 
     fetchAPI('/salvavita/api/rollback-transaction', 'POST')
         .then(data => {
             loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
 
             if (data.success) {
                 showOperationsMessage('✅ ' + data.message);
+                contentDiv.innerHTML = '<div class="empty-state"><p>✅ Rollback completato con successo</p></div>';
+                contentDiv.style.display = 'block';
             } else {
                 showOperationsMessage('❌ Errore: ' + data.message, true);
+                actionsDiv.style.display = 'block';
             }
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
             showOperationsMessage('❌ Errore: ' + error.message, true);
+            actionsDiv.style.display = 'block';
         });
 }

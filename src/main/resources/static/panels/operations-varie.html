@@ -14,4 +14,10 @@
             <p>Clicca "Esegui Operazioni" per eseguire le query INSERT/UPDATE/DELETE</p>
         </div>
     </div>
+    <div id="operationsActions" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="btn-commit" onclick="doCommitOperations()" style="background: #4caf50; padding: 12px 30px; font-size: 16px;">✅ COMMIT</button>
+            <button class="btn-rollback" onclick="doRollbackOperations()" style="background: #f44336; padding: 12px 30px; font-size: 16px;">❌ ROLLBACK</button>
+        </div>
+    </div>
 </div>
