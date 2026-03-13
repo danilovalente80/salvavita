@@ -1153,8 +1153,10 @@ public class OracleService {
         try {
             conn = getConnection();
             stmt = conn.createStatement();
+            // Timeout di 2 minuti (120 secondi)
+            stmt.setQueryTimeout(120);
             conn.setAutoCommit(false);
-            logger.info("Inizio inserimento P.S. Riservati (giorni: {})", giorni);
+            logger.info("Inizio inserimento P.S. Riservati (giorni: {}) - Query timeout: 120 secondi", giorni);
 
             String[][] queriesPerEnte = {
                 {"P.S. Riservati DEMANIO", buildInsertPsRiservatiQuery("dem_asp", giorni)},
@@ -1216,8 +1218,12 @@ public class OracleService {
 
     /**
      * Costruisce la query INSERT per P.S. Riservati
+     * Per ENTRATE usa SYSDATE-5, per gli altri SYSDATE-60
      */
     private String buildInsertPsRiservatiQuery(String schema, int giorni) {
+        // Per ENTRATE usa -5 giorni, per gli altri -60
+        int daysLimit = schema.equals("entr_asp") ? 5 : 60;
+        
         return "INSERT INTO " + schema + ".d_pronto_soccorso_malati " +
                "(sequ_long_id, fk_profilo_doc_proto, data_inserimento, esito, fk_aoo) " +
                "SELECT " + schema + ".s_d_pronto_soccorso_malati.NEXTVAL, " +
@@ -1225,7 +1231,7 @@ public class OracleService {
                "FROM " + schema + ".d_profilo_doc_proto pdp " +
                "WHERE (pdp.flag_riservato_01=1 OR pdp.flag_presenza_dati_sensibili=1) " +
                "AND pdp.fk_ufficio_protocollo IS NOT NULL " +
-               "AND pdp.data_protocollo > SYSDATE-60 " +
+               "AND pdp.data_protocollo > SYSDATE-" + daysLimit + " " +
                "AND (pdp.data_protocollo > SYSDATE-" + giorni + " " +
                "OR (SELECT COUNT(*) FROM " + schema + ".d_attivita dat " +
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
