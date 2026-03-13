@@ -325,6 +325,28 @@ public class QueryController {
     }
 
     /**
+    /**
+     * POST /api/insert-ps-riservati
+     * Inserisce i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
+     */
+    @PostMapping("/insert-ps-riservati")
+    public ResponseEntity<?> insertPsRiservati(@RequestParam int giorni) {
+        try {
+            logger.info("Richiesta POST /insert-ps-riservati - Giorni: {}", giorni);
+            Map<String, Object> result = oracleService.insertPsRiservati(giorni);
+            if ((Boolean)result.get("success")) {
+                return ResponseEntity.ok(result);
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(result);
+            }
+        } catch (Exception e) {
+            logger.error("Errore nell'inserimento P.S. Riservati: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'inserimento", e.getMessage()));
+        }
+    }
+
      * POST /api/commit-transaction
      * Esegui il commit di tutte le operazioni in sospeso
      */
