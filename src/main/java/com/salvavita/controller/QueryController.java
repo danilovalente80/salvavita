@@ -222,19 +222,49 @@ public class QueryController {
     @GetMapping("/health")
     public ResponseEntity<?> health() {
         try {
+            logger.info("=== HEALTH CHECK ===");
             logger.info("Richiesta GET /health");
-            oracleService.getConnection().close();
+            logger.info("Tentativo di connessione al database...");
+            
+            Connection conn = oracleService.getConnection();
+            logger.info("✅ Connessione ottenuta!");
+            logger.info("AutoCommit: {}", conn.getAutoCommit());
+            logger.info("IsClosed: {}", conn.isClosed());
+            
+            // Test query
+            try (Statement stmt = conn.createStatement()) {
+                ResultSet rs = stmt.executeQuery("SELECT 1 FROM DUAL");
+                if (rs.next()) {
+                    logger.info("✅ Query test SELECT 1 FROM DUAL: SUCCESS");
+                }
+            }
+            
+            conn.close();
+            logger.info("✅ Connessione chiusa correttamente");
             
             Map<String, String> response = new HashMap<>();
             response.put("status", "OK");
             response.put("message", "Connessione al database attiva");
+            response.put("timestamp", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
             
+            logger.info("=== HEALTH CHECK COMPLETATO ===");
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            logger.error("Errore di connessione: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(new ErrorResponse("Database non disponibile", e.getMessage()));
+            logger.error("❌ ERRORE DI CONNESSIONE NEL HEALTH CHECK", e);
+            logger.error("Messaggio errore: {}", e.getMessage());
+            logger.error("Classe eccezione: {}", e.getClass().getName());
+            if (e.getCause() != null) {
+                logger.error("Causa: {}", e.getCause().getMessage());
+            }
+            
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("status", "FAIL");
+            errorResponse.put("error", e.getClass().getName());
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("timestamp", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date()));
+            
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
         }
     }
 
