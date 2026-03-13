@@ -48,10 +48,20 @@ public class OracleService {
         int retryCount = 0;
         Exception lastException = null;
 
+        logger.info("=== INIZIO CONNESSIONE ORACLE ===");
+        logger.info("Driver: {}", dbDriver);
+        logger.info("URL: {}", dbUrl);
+        logger.info("Username: {}", dbUser);
+        logger.info("Password length: {} caratteri", (dbPassword != null ? dbPassword.length() : 0));
+        logger.info("=== TENTATIVI DI CONNESSIONE ===");
+
         while (retryCount < maxRetries) {
             try {
+                retryCount++;
+                logger.info("Tentativo di connessione {}/{}", retryCount, maxRetries);
+                
                 Class.forName(dbDriver);
-                logger.debug("Connessione a Oracle: {}", dbUrl);
+                logger.info("Driver Oracle caricato correttamente");
                 
                 java.util.Properties props = new java.util.Properties();
                 props.setProperty("user", dbUser);
@@ -59,22 +69,59 @@ public class OracleService {
                 props.setProperty("oracle.net.CONNECT_TIMEOUT", "10000");
                 props.setProperty("oracle.jdbc.ReadTimeout", "60000");
                 props.setProperty("v$session.program", "Salvavita");
+                props.setProperty("_use_frame", "false");
+                props.setProperty("statement_timeout", "60");
+                
+                logger.info("Proprietà connessione impostate");
+                logger.info("Tentativo di connessione con DriverManager.getConnection()...");
                 
                 Connection conn = DriverManager.getConnection(dbUrl, props);
-                logger.info("Connessione effettuata con successo");
+                
+                logger.info("✅ CONNESSIONE RIUSCITA!");
+                logger.info("Connection object: {}", conn.getClass().getName());
+                logger.info("AutoCommit: {}", conn.getAutoCommit());
+                
+                // Test della connessione
+                try (Statement stmt = conn.createStatement()) {
+                    ResultSet rs = stmt.executeQuery("SELECT 1 FROM DUAL");
+                    if (rs.next()) {
+                        logger.info("✅ Test query SELECT 1 FROM DUAL: SUCCESS");
+                    }
+                }
+                
                 return conn;
+                
+            } catch (ClassNotFoundException e) {
+                lastException = e;
+                logger.error("❌ ERRORE: Driver Oracle non trovato: {}", e.getMessage());
+                logger.error("Stack trace:", e);
+            } catch (java.sql.SQLRecoverableException e) {
+                lastException = e;
+                logger.error("❌ ERRORE RECUPERABILE (tentativo {}/{}): {}", retryCount, maxRetries, e.getMessage());
+                logger.error("Error code: {}", e.getErrorCode());
+                logger.error("SQL State: {}", e.getSQLState());
+                logger.error("Stack trace:", e);
+                
+                if (retryCount < maxRetries) {
+                    long waitTime = 1000 * retryCount;
+                    logger.warn("Attesa {} ms prima di ritentare...", waitTime);
+                    Thread.sleep(waitTime);
+                }
             } catch (Exception e) {
                 lastException = e;
-                retryCount++;
+                logger.error("❌ ERRORE GENERICO (tentativo {}/{}): {}", retryCount, maxRetries, e.getMessage());
+                logger.error("Classe eccezione: {}", e.getClass().getName());
+                logger.error("Stack trace:", e);
+                
                 if (retryCount < maxRetries) {
-                    logger.warn("Errore di connessione (tentativo {}/{}): {}", retryCount, maxRetries, e.getMessage());
-                    Thread.sleep(1000 * retryCount); // Aumenta il delay con ogni retry
-                } else {
-                    logger.error("Errore nella connessione al database dopo {} tentativi: {}", maxRetries, e.getMessage(), e);
+                    long waitTime = 1000 * retryCount;
+                    logger.warn("Attesa {} ms prima di ritentare...", waitTime);
+                    Thread.sleep(waitTime);
                 }
             }
         }
         
+        logger.error("❌ FALLIMENTO CONNESSIONE DOPO {} TENTATIVI", maxRetries);
         throw new Exception("Errore di connessione dopo " + maxRetries + " tentativi: " + lastException.getMessage(), lastException);
     }
 
