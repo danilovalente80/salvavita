@@ -155,3 +155,53 @@ function doRollbackOperations() {
             actionsDiv.style.display = 'block';
         });
 }
+
+// ESEGUI P.S. RISERVATI OPERATIONS
+function executePsRiservatiOperations() {
+    // Chiedi il numero di giorni
+    const giorni = prompt('Inserisci il numero di giorni per le query P.S. Riservati:', '30');
+    
+    if (giorni === null) {
+        return; // Utente ha cancellato
+    }
+    
+    // Valida che sia un numero
+    if (isNaN(giorni) || parseInt(giorni) <= 0) {
+        showOperationsMessage('❌ Inserisci un numero valido di giorni', true);
+        return;
+    }
+
+    const contentDiv = document.getElementById('operationsContent');
+    const loadingDiv = document.getElementById('operationsLoading');
+    const actionsDiv = document.getElementById('operationsActions');
+
+    contentDiv.style.display = 'none';
+    actionsDiv.style.display = 'none';
+    loadingDiv.style.display = 'block';
+
+    fetchAPI(`/salvavita/api/insert-ps-riservati?giorni=${parseInt(giorni)}`, 'POST')
+        .then(data => {
+            loadingDiv.style.display = 'none';
+
+            if (data.success) {
+                // Mostra i risultati inline nel pannello
+                showOperationsResultsInline(data);
+
+                contentDiv.style.display = 'block';
+                actionsDiv.style.display = 'block';
+
+                showOperationsMessage(`✓ P.S. Riservati (${parseInt(giorni)} giorni) - ${data.operations.length} enti processati - ${data.totalRecords} record inseriti`);
+            } else {
+                contentDiv.innerHTML = '<div class="empty-state"><p>❌ Operazioni P.S. Riservati fallite</p></div>';
+                contentDiv.style.display = 'block';
+                showOperationsMessage(`❌ ${data.message}`, true);
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            contentDiv.innerHTML = '<div class="empty-state"><p>❌ Errore nella comunicazione</p></div>';
+            contentDiv.style.display = 'block';
+            showOperationsMessage(`❌ Errore: ${error.message}`, true);
+            console.error('Errore:', error);
+        });
+}

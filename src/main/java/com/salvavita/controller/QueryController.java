@@ -363,7 +363,7 @@ public class QueryController {
     public ResponseEntity<?> insertPsRiservati(@RequestParam int giorni) {
         try {
             logger.info("Richiesta POST /insert-ps-riservati - Giorni: {}", giorni);
-            Map<String, Object> result = oracleService.insertPsRiservati(giorni);
+            Map<String, Object> result = oracleService.insertPsRiservatiOperations(giorni);
             if ((Boolean)result.get("success")) {
                 return ResponseEntity.ok(result);
             } else {

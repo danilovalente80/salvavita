@@ -948,6 +948,109 @@ public class OracleService {
      * Restituisce il numero di record impattati per ogni operazione
      */
     public Map<String, Object> executeVariousOperations() throws Exception {
+
+    /**
+     * Inserisci P.S. Riservati per tutti gli enti (con parametro giorni)
+     */
+    public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
+        Connection conn = null;
+        Statement stmt = null;
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> operations = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            logger.info("Inizio inserimento P.S. Riservati (giorni: {}) - senza autocommit", giorni);
+
+            // Array di query per tutti gli enti
+            String[][] queriesPerEnte = {
+                {"P.S. Riservati DEMANIO", buildInsertPsRiservatiQuery("dem_asp", giorni)},
+                {"P.S. Riservati AAMS", buildInsertPsRiservatiQuery("aams_asp", giorni)},
+                {"P.S. Riservati CONSIP", buildInsertPsRiservatiQuery("consip_asp", giorni)},
+                {"P.S. Riservati SOGEI", buildInsertPsRiservatiQuery("sogei_asp", giorni)},
+                {"P.S. Riservati ENTRATE", buildInsertPsRiservatiQuery("entr_asp", giorni)}
+            };
+
+            int totalRecords = 0;
+
+            for (String[] queryInfo : queriesPerEnte) {
+                String label = queryInfo[0];
+                String query = queryInfo[1];
+                
+                try {
+                    int rowsInserted = stmt.executeUpdate(query);
+                    totalRecords += rowsInserted;
+                    
+                    Map<String, Object> op = new HashMap<>();
+                    op.put("label", label);
+                    op.put("recordsAffected", rowsInserted);
+                    operations.add(op);
+                    
+                    logger.info("{} completato: {} record", label, rowsInserted);
+                } catch (Exception e) {
+                    logger.error("Errore nell'inserimento {}: {}", label, e.getMessage());
+                    Map<String, Object> op = new HashMap<>();
+                    op.put("label", label);
+                    op.put("recordsAffected", 0);
+                    op.put("error", e.getMessage());
+                    operations.add(op);
+                }
+            }
+
+            logger.info("Inserimento P.S. Riservati completato - Totale {} record", totalRecords);
+
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            TransactionService.saveConnection(conn);
+
+            result.put("success", true);
+            result.put("message", "Inserimento P.S. Riservati in sospeso - In attesa di Commit/Rollback");
+            result.put("totalRecords", totalRecords);
+            result.put("operations", operations);
+            result.put("giorni", giorni);
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (Exception ex) {
+                    logger.error("Errore nel rollback: {}", ex.getMessage());
+                }
+            }
+            logger.error("Errore nell'inserimento P.S. Riservati: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Errore: " + e.getMessage());
+        } finally {
+            closeResources(null, stmt, null);
+        }
+
+        return result;
+    }
+
+    /**
+     * Costruisce la query INSERT per P.S. Riservati di uno specifico ente
+     */
+    private String buildInsertPsRiservatiQuery(String schema, int giorni) {
+        return "INSERT INTO " + schema + ".d_pronto_soccorso_malati " +
+               "(sequ_long_id, fk_profilo_doc_proto, data_inserimento, esito, fk_aoo) " +
+               "SELECT " + schema + ".s_d_pronto_soccorso_malati.NEXTVAL, " +
+               "pdp.sequ_long_id, SYSDATE, 0, pdp.fk_aoo " +
+               "FROM " + schema + ".d_profilo_doc_proto pdp " +
+               "WHERE (pdp.flag_riservato_01=1 OR pdp.flag_presenza_dati_sensibili=1) " +
+               "AND pdp.fk_ufficio_protocollo IS NOT NULL " +
+               "AND pdp.data_protocollo > SYSDATE-60 " +
+               "AND (pdp.data_protocollo > SYSDATE-" + giorni + " " +
+               "OR (SELECT COUNT(*) FROM " + schema + ".d_attivita dat " +
+               "WHERE dat.fk_documento=pdp.sequ_long_id " +
+               "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
+    }
+
         Connection conn = null;
         Statement stmt = null;
         Map<String, Object> result = new HashMap<>();
