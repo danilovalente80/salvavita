@@ -74,6 +74,148 @@ public class QueryController {
     }
 
     /**
+     * GET /api/buchi-protocollo
+     * Restituisce lista di buchi di protocollo
+     */
+    @GetMapping("/buchi-protocollo")
+    public ResponseEntity<?> getBuchiProtocollo() {
+        try {
+            logger.info("Richiesta GET /buchi-protocollo");
+            List<com.salvavita.model.BuchiProtocollo> data = oracleService.getBuchiProtocollo();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("totalRecords", data.size());
+            response.put("data", data);
+
+            logger.info("Risposta: {} record trovati", data.size());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/controllo-processi
+     * Restituisce TUTTE le query di controllo processi con UNA SOLA connessione
+     * (risolve ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit)
+     */
+    @GetMapping("/controllo-processi")
+    public ResponseEntity<?> getControlloProcessi() {
+        try {
+            logger.info("Richiesta GET /controllo-processi (endpoint unificato)");
+            Map<String, Object> result = oracleService.getControlloProcessiCompleto();
+
+            logger.info("Risposta: controllo processi completato");
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione delle query", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/allineamenti-processi
+     * Restituisce controllo allineamenti processi
+     */
+    @GetMapping("/allineamenti-processi")
+    public ResponseEntity<?> getAllineamentiProcessi() {
+        try {
+            logger.info("Richiesta GET /allineamenti-processi");
+            List<com.salvavita.model.AllineamentoProcesso> data = oracleService.getAllineamentiProcessi();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("totalRecords", data.size());
+            response.put("data", data);
+
+            logger.info("Risposta: {} record trovati", data.size());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/demone-mail-sender/sogei
+     * Restituisce stato demone mail sender SOGEI
+     */
+    @GetMapping("/demone-mail-sender/sogei")
+    public ResponseEntity<?> getDemoneMailSenderSogei() {
+        try {
+            logger.info("Richiesta GET /demone-mail-sender/sogei");
+            com.salvavita.model.DemoneMailSender data = oracleService.getDemoneMailSenderSogei();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/demone-mail-sender/entrate
+     * Restituisce stato demone mail sender ENTRATE
+     */
+    @GetMapping("/demone-mail-sender/entrate")
+    public ResponseEntity<?> getDemoneMailSenderEntrate() {
+        try {
+            logger.info("Richiesta GET /demone-mail-sender/entrate");
+            com.salvavita.model.DemoneMailSender data = oracleService.getDemoneMailSenderEntrate();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("Errore nella richiesta: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nell'esecuzione della query", e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/riavvia-demone-mail-sender
+     * Riavvia il demone mail sender per uno schema specifico
+     */
+    @PostMapping("/riavvia-demone-mail-sender")
+    public ResponseEntity<?> riavviaDemoneMailSender(@RequestParam String schema) {
+        try {
+            logger.info("Richiesta POST /riavvia-demone-mail-sender per schema: {}", schema);
+
+            // Validazione schema
+            if (!schema.equals("sogei_asp") && !schema.equals("entr_asp")) {
+                return ResponseEntity.badRequest()
+                        .body(new ErrorResponse("Schema non valido", "Schema deve essere 'sogei_asp' o 'entr_asp'"));
+            }
+
+            Map<String, Object> result = oracleService.riavviaDemoneMailSender(schema);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            logger.error("Errore nel riavvio del demone: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Errore nel riavvio", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/health
      * Verifica la connessione al database
      */
@@ -132,20 +274,15 @@ public class QueryController {
 
     /**
      * POST /api/delete-protocolli
-     * Cancella i protocolli in transizione per uno specifico ente
+     * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTO-COMMIT)
      */
     @PostMapping("/delete-protocolli")
     public ResponseEntity<?> deleteProtocolli(@RequestParam String ente) {
         try {
             logger.info("Richiesta POST /delete-protocolli per ente: {}", ente);
-            oracleService.deleteProtocolliInTransizione(ente);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Protocolli in transizione eliminati per ente: " + ente);
-            
-            return ResponseEntity.ok(response);
-            
+            Map<String, Object> result = oracleService.deleteProtocolliInTransizione(ente);
+            return ResponseEntity.ok(result);
+
         } catch (Exception e) {
             logger.error("Errore nell'eliminazione dei protocolli: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -171,29 +308,26 @@ public class QueryController {
     }
 
     /**
-     * POST /api/insert-ps-riservati
-     * Inserisce i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
+     * POST /api/execute-various-operations
+     * Esegue operazioni INSERT/UPDATE/DELETE varie senza autocommit
      */
-    @PostMapping("/insert-ps-riservati")
-    public ResponseEntity<?> insertPsRiservati(@RequestParam int giorni) {
+    @PostMapping("/execute-various-operations")
+    public ResponseEntity<?> executeVariousOperations() {
         try {
-            logger.info("Richiesta POST /insert-ps-riservati - Giorni: {}", giorni);
-            
-            Map<String, Object> result = oracleService.insertPsRiservati(giorni);
-            
-            if ((Boolean)result.get("success")) {
-                return ResponseEntity.ok(result);
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body(result);
-            }
-            
+            logger.info("Richiesta POST /execute-various-operations");
+            Map<String, Object> result = oracleService.executeVariousOperations();
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
-            logger.error("Errore nell'inserimento P.S. Riservati: {}", e.getMessage(), e);
+            logger.error("Errore nell'esecuzione delle operazioni varie: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Errore nell'inserimento", e.getMessage()));
+                    .body(new ErrorResponse("Errore nell'esecuzione", e.getMessage()));
         }
     }
+
+    /**
+     * POST /api/commit-transaction
+     * Esegui il commit di tutte le operazioni in sospeso
+     */
     @PostMapping("/commit-transaction")
     public ResponseEntity<?> commitTransaction() {
         try {

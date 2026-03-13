@@ -252,6 +252,26 @@
             transform: scale(0.95);
         }
 
+        .btn-riavvia {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-riavvia:hover {
+            background: #f57c00;
+            transform: scale(1.05);
+        }
+
+        .btn-riavvia:active {
+            transform: scale(0.95);
+        }
+
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -402,7 +422,9 @@
     <!-- SCRIPT SPECIFICI DEI PANNELLI -->
     <script src="js/protocolli.js"></script>
     <script src="js/tasks.js"></script>
-    <script src="js/ps-riservati.js"></script>
+    <script src="js/buchi.js"></script>
+    <script src="js/processi.js"></script>
+    <script src="js/operations.js"></script>
 
     <script>
         // Carica i pannelli al page load
@@ -415,9 +437,11 @@
         function loadPanels() {
             const container = document.getElementById('panelsContainer');
             const panels = [
-                { url: 'panels/protocolli-sospesi.html', id: 'protocolli-panel' },
                 { url: 'panels/task-schedulati.html', id: 'tasks-panel' },
-                { url: 'panels/ps-riservati.html', id: 'riservati-panel' }
+                { url: 'panels/controllo-processi.html', id: 'processi-panel' },
+                { url: 'panels/protocolli-sospesi.html', id: 'protocolli-panel' },
+                { url: 'panels/buchi-protocollo.html', id: 'buchi-panel' },
+                { url: 'panels/operations-varie.html', id: 'operations-panel' }
             ];
 
             panels.forEach((panel, index) => {
