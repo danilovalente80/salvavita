@@ -2,32 +2,6 @@
  * protocolli.js - Logica specifica per il pannello Protocolli Sospesi
  */
 
-// MOSTRA MESSAGGIO (SUCCESS O ERROR)
-function showProtocolliMessage(message, isError = false) {
-    const errorDiv = document.getElementById('protocolliError');
-    const successDiv = document.getElementById('protocolliSuccess');
-
-    if (isError) {
-        // Tronca il messaggio errore a 200 caratteri
-        const truncatedMessage = message.length > 200 ? message.substring(0, 200) + '...' : message;
-        errorDiv.innerHTML = truncatedMessage;
-        errorDiv.style.display = 'block';
-        successDiv.style.display = 'none';
-        // Auto-hide dopo 8 secondi
-        setTimeout(() => {
-            errorDiv.style.display = 'none';
-        }, 8000);
-    } else {
-        successDiv.innerHTML = message;
-        successDiv.style.display = 'block';
-        errorDiv.style.display = 'none';
-        // Auto-hide dopo 5 secondi
-        setTimeout(() => {
-            successDiv.style.display = 'none';
-        }, 5000);
-    }
-}
-
 // CARICA PROTOCOLLI SOSPESI
 function loadProtocolliSospesi() {
     const contentDiv = document.getElementById('protocolliContent');
@@ -114,7 +88,7 @@ function buildProtocolliTable(data) {
             <td>${dataIns}</td>
             <td>${row.statoDocumento || '-'}</td>
             <td>${row.esitoDocumento || '-'}</td>
-            <td style="color: #f44336;" title="${row.errore || '-'}">${(row.errore && row.errore.length > 200) ? row.errore.substring(0, 200) + '...' : (row.errore || '-')}</td>
+            <td style="color: #f44336;">${row.errore || '-'}</td>
         </tr>`;
     });
 
@@ -137,22 +111,27 @@ function deleteProtocolliByEnte(ente) {
     }
 
     const loadingDiv = document.getElementById('protocolliLoading');
+    const errorDiv = document.getElementById('protocolliError');
 
     loadingDiv.style.display = 'block';
+    errorDiv.style.display = 'none';
 
     fetchAPI(`/salvavita/api/delete-protocolli?ente=${encodeURIComponent(ente)}`, 'POST')
         .then(data => {
             loadingDiv.style.display = 'none';
             if (data.success) {
-                // Mostra popup con riepilogo e pulsanti commit/rollback
-                showDeleteProtocolliModal(data);
+                alert(`✅ ${data.message}`);
+                // Ricarica i dati
+                loadProtocolliSospesi();
             } else {
-                showProtocolliMessage(`❌ Errore: ${data.message}`, true);
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = `❌ Errore: ${data.message}`;
             }
         })
         .catch(error => {
             loadingDiv.style.display = 'none';
-            showProtocolliMessage(`❌ Errore nella comunicazione: ${error.message}`, true);
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = `❌ Errore nella comunicazione: ${error.message}`;
             console.error('Errore:', error);
         });
 }
@@ -206,18 +185,16 @@ function doCommit() {
     fetchAPI('/salvavita/api/commit-transaction', 'POST')
         .then(data => {
             if (data.success) {
+                alert(`✅ ${data.message}`);
                 closeTransactionModal();
-                showProtocolliMessage(`✅ ${data.message}`);
                 // Ricarica i dati
                 loadProtocolliSospesi();
             } else {
-                closeTransactionModal();
-                showProtocolliMessage(`❌ Errore: ${data.message}`, true);
+                alert(`❌ Errore: ${data.message}`);
             }
         })
         .catch(error => {
-            closeTransactionModal();
-            showProtocolliMessage(`❌ Errore: ${error.message}`, true);
+            alert(`❌ Errore: ${error.message}`);
         });
 }
 
@@ -226,17 +203,14 @@ function doRollback() {
     fetchAPI('/salvavita/api/rollback-transaction', 'POST')
         .then(data => {
             if (data.success) {
+                alert(`✅ ${data.message}`);
                 closeTransactionModal();
-                showProtocolliMessage(`✅ ${data.message}`);
-                loadProtocolliSospesi();
             } else {
-                closeTransactionModal();
-                showProtocolliMessage(`❌ Errore: ${data.message}`, true);
+                alert(`❌ Errore: ${data.message}`);
             }
         })
         .catch(error => {
-            closeTransactionModal();
-            showProtocolliMessage(`❌ Errore: ${error.message}`, true);
+            alert(`❌ Errore: ${error.message}`);
         });
 }
 
@@ -244,116 +218,4 @@ function doRollback() {
 function closeTransactionModal() {
     document.getElementById('transactionModal').style.display = 'none';
     window.pendingTransaction = null;
-}
-
-// MOSTRA POPUP PER DELETE PROTOCOLLI BY ENTE
-function showDeleteProtocolliModal(data) {
-    // Costruisci HTML per il popup
-    let modalBody = '<div style="max-height: 400px; overflow-y: auto;">';
-    modalBody += '<h4 style="margin-bottom: 15px;">📊 Riepilogo Cancellazione</h4>';
-
-    modalBody += '<div style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 15px;">';
-    modalBody += `<strong>Ente: </strong><span style="color: #667eea; font-weight: bold;">${data.ente}</span><br>`;
-    modalBody += `<strong>Query eseguite: </strong><span style="color: #667eea; font-weight: bold;">${data.queries}</span><br>`;
-    modalBody += `<strong>Record interessati: </strong><span style="color: #667eea; font-weight: bold; font-size: 18px;">${data.recordsAffected}</span>`;
-    modalBody += '</div>';
-
-    modalBody += '<p style="color: #f44336; font-weight: bold;">⚠️ Seleziona COMMIT per salvare i cambiamenti o ROLLBACK per annullarli</p>';
-    modalBody += '</div>';
-
-    // Crea il modal dinamicamente
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'deleteProtocolliModal';
-    modal.style.display = 'block';
-
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                ⚠️ Conferma Cancellazione
-            </div>
-            <div class="modal-body">
-                ${modalBody}
-            </div>
-            <div class="modal-footer">
-                <button class="btn-commit" onclick="doCommitFromDeleteProtocolli()">✅ COMMIT</button>
-                <button class="btn-rollback" onclick="doRollbackFromDeleteProtocolli()">❌ ROLLBACK</button>
-            </div>
-        </div>
-    `;
-
-    // Rimuovi modal esistente se presente
-    const existingModal = document.getElementById('deleteProtocolliModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    document.body.appendChild(modal);
-
-    // Chiudi modal cliccando fuori
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.remove();
-        }
-    });
-}
-
-// COMMIT DA DELETE PROTOCOLLI
-function doCommitFromDeleteProtocolli() {
-    const modal = document.getElementById('deleteProtocolliModal');
-    const loadingDiv = document.getElementById('protocolliLoading');
-
-    loadingDiv.style.display = 'block';
-
-    fetchAPI('/salvavita/api/commit-transaction', 'POST')
-        .then(data => {
-            loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
-
-            if (data.success) {
-                showProtocolliMessage('✅ ' + data.message);
-                loadProtocolliSospesi();
-            } else {
-                showProtocolliMessage('❌ Errore: ' + data.message, true);
-            }
-        })
-        .catch(error => {
-            loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
-            showProtocolliMessage('❌ Errore: ' + error.message, true);
-        });
-}
-
-// ROLLBACK DA DELETE PROTOCOLLI
-function doRollbackFromDeleteProtocolli() {
-    const modal = document.getElementById('deleteProtocolliModal');
-    const loadingDiv = document.getElementById('protocolliLoading');
-
-    loadingDiv.style.display = 'block';
-
-    fetchAPI('/salvavita/api/rollback-transaction', 'POST')
-        .then(data => {
-            loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
-
-            if (data.success) {
-                showProtocolliMessage('✅ ' + data.message);
-                loadProtocolliSospesi();
-            } else {
-                showProtocolliMessage('❌ Errore: ' + data.message, true);
-            }
-        })
-        .catch(error => {
-            loadingDiv.style.display = 'none';
-            if (modal) {
-                modal.remove();
-            }
-            showProtocolliMessage('❌ Errore: ' + error.message, true);
-        });
 }

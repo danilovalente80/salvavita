@@ -1,8 +1,5 @@
 package com.salvavita.service;
 
-import com.salvavita.model.AllineamentoProcesso;
-import com.salvavita.model.BuchiProtocollo;
-import com.salvavita.model.DemoneMailSender;
 import com.salvavita.model.ProtocolliSospesi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.net.ssl.*;
-import java.security.cert.X509Certificate;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -167,330 +162,6 @@ public class OracleService {
     }
 
     /**
-     * Esegue la query BUCHI DI PROTOCOLLO
-     */
-    public List<BuchiProtocollo> getBuchiProtocollo() throws Exception {
-        List<BuchiProtocollo> result = new ArrayList<>();
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = getConnection();
-            stmt = conn.createStatement();
-
-            String query = buildQueryBuchiProtocollo();
-            logger.info("Esecuzione query BUCHI DI PROTOCOLLO");
-
-            rs = stmt.executeQuery(query);
-
-            while (rs.next()) {
-                BuchiProtocollo bp = new BuchiProtocollo();
-                bp.setEnte(rs.getString(1));
-                bp.setCount(rs.getInt(2));
-                bp.setErrore(rs.getString(3));
-                bp.setMinId(rs.getLong(4));
-                bp.setNumeroProtocollo(rs.getString(5));
-
-                // ID_AOO può essere null
-                long idAoo = rs.getLong(6);
-                if (!rs.wasNull()) {
-                    bp.setIdAoo(idAoo);
-                }
-
-                bp.setCodiceAoo(rs.getString(7));
-
-                Timestamp minTs = rs.getTimestamp(8);
-                if (minTs != null) {
-                    bp.setMinDataIns(minTs.toLocalDateTime());
-                }
-
-                Timestamp maxTs = rs.getTimestamp(9);
-                if (maxTs != null) {
-                    bp.setMaxDataIns(maxTs.toLocalDateTime());
-                }
-
-                result.add(bp);
-            }
-
-            logger.info("Query eseguita: {} record trovati", result.size());
-
-        } catch (Exception e) {
-            logger.error("Errore nell'esecuzione della query BUCHI DI PROTOCOLLO: {}", e.getMessage(), e);
-            throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
-        } finally {
-            closeResources(rs, stmt, conn);
-        }
-
-        return result;
-    }
-
-    /**
-     * Esegue tutte le query per il controllo processi con una SINGOLA connessione
-     * per evitare ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit
-     */
-    public Map<String, Object> getControlloProcessiCompleto() throws Exception {
-        Map<String, Object> result = new HashMap<>();
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            // UNA SOLA CONNESSIONE per tutte le query
-            conn = getConnection();
-            stmt = conn.createStatement();
-
-            logger.info("Esecuzione query CONTROLLO PROCESSI COMPLETO (1 connessione)");
-
-            // 1. Query Allineamenti
-            List<AllineamentoProcesso> allineamenti = new ArrayList<>();
-            String queryAllineamenti = "SELECT count(*), 'Allineamenti_in_errore' " +
-                          "FROM sesamo.allineamenti al " +
-                          "WHERE al.data_inizio_exe>sysdate-1 AND al.errore_exe IS NOT NULL AND al.id_demone NOT IN (9,10) " +
-                          "UNION ALL " +
-                          "SELECT 28-count(*), 'allineamenti_Non_Schedulati' " +
-                          "FROM (SELECT DISTINCT al.id_demone, al.id_ente FROM sesamo.allineamenti al " +
-                          "WHERE al.data_inizio_exe>sysdate-1 AND al.id_demone NOT IN (3,6,8,9,10))";
-
-            rs = stmt.executeQuery(queryAllineamenti);
-            while (rs.next()) {
-                AllineamentoProcesso ap = new AllineamentoProcesso();
-                ap.setCount(rs.getInt(1));
-                ap.setTipo(rs.getString(2));
-                allineamenti.add(ap);
-            }
-            rs.close();
-            logger.info("Query allineamenti completata: {} record", allineamenti.size());
-
-            // 2. Query Demone SOGEI
-            DemoneMailSender demoneSogei = null;
-            String querySogei = "SELECT 'EJBMAILSENDER SOGEI', d.codi_nome, d.is_working, d.date_start_working, d.date_stop_working " +
-                          "FROM sogei_asp.d_demoni d " +
-                          "WHERE codi_nome='EjbProtocolloMailSender'";
-
-            rs = stmt.executeQuery(querySogei);
-            if (rs.next()) {
-                demoneSogei = new DemoneMailSender();
-                demoneSogei.setEnte(rs.getString(1));
-                demoneSogei.setCodiNome(rs.getString(2));
-                demoneSogei.setIsWorking(rs.getInt(3));
-
-                Timestamp tsStart = rs.getTimestamp(4);
-                if (tsStart != null) {
-                    demoneSogei.setDateStartWorking(tsStart.toLocalDateTime());
-                }
-
-                Timestamp tsStop = rs.getTimestamp(5);
-                if (tsStop != null) {
-                    demoneSogei.setDateStopWorking(tsStop.toLocalDateTime());
-                }
-            }
-            rs.close();
-            logger.info("Query demone SOGEI completata");
-
-            // 3. Query Demone ENTRATE
-            DemoneMailSender demoneEntrate = null;
-            String queryEntrate = "SELECT 'EJBMAILSENDER ENTRATE', d.codi_nome, d.is_working, d.date_start_working, d.date_stop_working " +
-                          "FROM entr_asp.d_demoni d " +
-                          "WHERE codi_nome='EjbProtocolloMailSender'";
-
-            rs = stmt.executeQuery(queryEntrate);
-            if (rs.next()) {
-                demoneEntrate = new DemoneMailSender();
-                demoneEntrate.setEnte(rs.getString(1));
-                demoneEntrate.setCodiNome(rs.getString(2));
-                demoneEntrate.setIsWorking(rs.getInt(3));
-
-                Timestamp tsStart = rs.getTimestamp(4);
-                if (tsStart != null) {
-                    demoneEntrate.setDateStartWorking(tsStart.toLocalDateTime());
-                }
-
-                Timestamp tsStop = rs.getTimestamp(5);
-                if (tsStop != null) {
-                    demoneEntrate.setDateStopWorking(tsStop.toLocalDateTime());
-                }
-            }
-            rs.close();
-            logger.info("Query demone ENTRATE completata");
-
-            // Costruisci risultato
-            result.put("success", true);
-            result.put("allineamenti", allineamenti);
-            result.put("demoneSogei", demoneSogei);
-            result.put("demoneEntrate", demoneEntrate);
-
-        } catch (Exception e) {
-            logger.error("Errore nell'esecuzione delle query CONTROLLO PROCESSI: {}", e.getMessage(), e);
-            throw new Exception("Errore nell'esecuzione delle query: " + e.getMessage(), e);
-        } finally {
-            // Chiudi TUTTO inclusa la connessione
-            closeResources(rs, stmt, conn);
-        }
-
-        return result;
-    }
-
-    /**
-     * Esegue la query ALLINEAMENTI PROCESSI
-     */
-    public List<AllineamentoProcesso> getAllineamentiProcessi() throws Exception {
-        List<AllineamentoProcesso> result = new ArrayList<>();
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = getConnection();
-            stmt = conn.createStatement();
-
-            String query = "SELECT count(*), 'Allineamenti_in_errore' " +
-                          "FROM sesamo.allineamenti al " +
-                          "WHERE al.data_inizio_exe>sysdate-1 AND al.errore_exe IS NOT NULL AND al.id_demone NOT IN (9,10) " +
-                          "UNION ALL " +
-                          "SELECT 28-count(*), 'allineamenti_Non_Schedulati' " +
-                          "FROM (SELECT DISTINCT al.id_demone, al.id_ente FROM sesamo.allineamenti al " +
-                          "WHERE al.data_inizio_exe>sysdate-1 AND al.id_demone NOT IN (3,6,8,9,10))";
-
-            logger.info("Esecuzione query ALLINEAMENTI PROCESSI");
-            rs = stmt.executeQuery(query);
-
-            while (rs.next()) {
-                AllineamentoProcesso ap = new AllineamentoProcesso();
-                ap.setCount(rs.getInt(1));
-                ap.setTipo(rs.getString(2));
-                result.add(ap);
-            }
-
-            logger.info("Query eseguita: {} record trovati", result.size());
-
-        } catch (Exception e) {
-            logger.error("Errore nell'esecuzione della query ALLINEAMENTI PROCESSI: {}", e.getMessage(), e);
-            throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
-        } finally {
-            closeResources(rs, stmt, conn);
-        }
-
-        return result;
-    }
-
-    /**
-     * Esegue la query DEMONE MAIL SENDER SOGEI
-     */
-    public DemoneMailSender getDemoneMailSenderSogei() throws Exception {
-        return getDemoneMailSender("sogei_asp", "EJBMAILSENDER SOGEI");
-    }
-
-    /**
-     * Esegue la query DEMONE MAIL SENDER ENTRATE
-     */
-    public DemoneMailSender getDemoneMailSenderEntrate() throws Exception {
-        return getDemoneMailSender("entr_asp", "EJBMAILSENDER ENTRATE");
-    }
-
-    /**
-     * Metodo helper per query demone mail sender
-     */
-    private DemoneMailSender getDemoneMailSender(String schema, String ente) throws Exception {
-        DemoneMailSender result = null;
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = getConnection();
-            stmt = conn.createStatement();
-
-            String query = "SELECT '" + ente + "', d.codi_nome, d.is_working, d.date_start_working, d.date_stop_working " +
-                          "FROM " + schema + ".d_demoni d " +
-                          "WHERE codi_nome='EjbProtocolloMailSender'";
-
-            logger.info("Esecuzione query DEMONE MAIL SENDER per {}", schema);
-            rs = stmt.executeQuery(query);
-
-            if (rs.next()) {
-                result = new DemoneMailSender();
-                result.setEnte(rs.getString(1));
-                result.setCodiNome(rs.getString(2));
-                result.setIsWorking(rs.getInt(3));
-
-                Timestamp tsStart = rs.getTimestamp(4);
-                if (tsStart != null) {
-                    result.setDateStartWorking(tsStart.toLocalDateTime());
-                }
-
-                Timestamp tsStop = rs.getTimestamp(5);
-                if (tsStop != null) {
-                    result.setDateStopWorking(tsStop.toLocalDateTime());
-                }
-            }
-
-            logger.info("Query eseguita per {}", schema);
-
-        } catch (Exception e) {
-            logger.error("Errore nell'esecuzione della query DEMONE MAIL SENDER {}: {}", schema, e.getMessage(), e);
-            throw new Exception("Errore nell'esecuzione della query: " + e.getMessage(), e);
-        } finally {
-            closeResources(rs, stmt, conn);
-        }
-
-        return result;
-    }
-
-    /**
-     * Riavvia il demone mail sender per uno schema specifico
-     */
-    public Map<String, Object> riavviaDemoneMailSender(String schema) throws Exception {
-        Connection conn = null;
-        Statement stmt = null;
-        Map<String, Object> result = new HashMap<>();
-
-        try {
-            conn = getConnection();
-            stmt = conn.createStatement();
-
-            // Disabilita autocommit
-            conn.setAutoCommit(false);
-
-            logger.info("Riavvio demone mail sender per {} (SENZA AUTOCOMMIT)", schema);
-
-            String updateQuery = "UPDATE " + schema + ".d_demoni d " +
-                                "SET d.is_working=0 " +
-                                "WHERE codi_nome='EjbProtocolloMailSender'";
-
-            int rowsAffected = stmt.executeUpdate(updateQuery);
-
-            logger.info("Demone mail sender riavviato per {} - {} record aggiornati - In attesa di COMMIT", schema, rowsAffected);
-
-            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
-            TransactionService.saveConnection(conn);
-
-            result.put("success", true);
-            result.put("message", "Riavvio demone in sospeso - In attesa di Commit/Rollback");
-            result.put("rowsAffected", rowsAffected);
-            result.put("schema", schema);
-
-        } catch (Exception e) {
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (Exception ex) {
-                    logger.error("Errore nel rollback: {}", ex.getMessage());
-                }
-            }
-            logger.error("Errore nel riavvio del demone mail sender {}: {}", schema, e.getMessage(), e);
-            result.put("success", false);
-            result.put("message", "Errore: " + e.getMessage());
-        } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
-        }
-
-        return result;
-    }
-
-    /**
      * Cancella i dati dalle tabelle di scheduling (SENZA AUTO-COMMIT)
      */
     public Map<String, Object> deleteSchedulingData() throws Exception {
@@ -545,13 +216,11 @@ public class OracleService {
     }
 
     /**
-     * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTOCOMMIT)
+     * Cancella i protocolli in transizione per uno specifico ente
      */
-    public Map<String, Object> deleteProtocolliInTransizione(String nomeEnte) throws Exception {
+    public void deleteProtocolliInTransizione(String nomeEnte) throws Exception {
         Connection conn = null;
         Statement stmt = null;
-        Map<String, Object> result = new HashMap<>();
-        int totalRecords = 0;
 
         try {
             com.salvavita.model.Ente ente = com.salvavita.model.Ente.fromNome(nomeEnte);
@@ -563,10 +232,7 @@ public class OracleService {
             conn = getConnection();
             stmt = conn.createStatement();
 
-            // Disabilita autocommit
-            conn.setAutoCommit(false);
-
-            logger.info("Inizio cancellazione protocolli in transizione per ente: {} (SENZA AUTOCOMMIT)", nomeEnte);
+            logger.info("Inizio cancellazione protocolli in transizione per ente: {}", nomeEnte);
 
             // Impostare lo schema corrente
             stmt.executeUpdate("ALTER SESSION SET CURRENT_SCHEMA=" + schema);
@@ -580,61 +246,47 @@ public class OracleService {
                     "WHERE p.id_transizione=to_char(pt.sequ_long_id))>0";
 
             // Delete statements
-            int rows1 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_collegati pc " +
+            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_collegati pc " +
                     "WHERE pc.fk_protocollo IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            int rows2 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_documenti " +
+            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_documenti " +
                     "WHERE fk_protocollo IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            int rows3 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_mitt_dest " +
+            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo_mitt_dest " +
                     "WHERE fk_protocollo IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            int rows4 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_chiusura_attivita_risposta " +
+            stmt.executeUpdate("DELETE FROM " + schema + ".p2_chiusura_attivita_risposta " +
                     "WHERE fk_p2_proto IN (SELECT sequ_long_id FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10)");
 
-            int rows5 = stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo p2 " +
+            stmt.executeUpdate("DELETE FROM " + schema + ".p2_protocollo p2 " +
                     "WHERE TO_NUMBER(p2.id_transizione) IN (" + selectQuery + ") " +
                     "AND p2.numero_protocollo IS NULL AND p2.data_ins>SYSDATE-10");
 
-            totalRecords = rows1 + rows2 + rows3 + rows4 + rows5;
+            conn.commit();
 
-            logger.info("Cancellazione protocolli in transizione per ente {} - {} record interessati - In attesa di COMMIT", nomeEnte, totalRecords);
-
-            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
-            TransactionService.saveConnection(conn);
-
-            result.put("success", true);
-            result.put("message", "Cancellazione in sospeso - In attesa di Commit/Rollback");
-            result.put("recordsAffected", totalRecords);
-            result.put("queries", 5);
-            result.put("ente", nomeEnte);
+            logger.info("Cancellazione protocolli in transizione per ente {} completata", nomeEnte);
 
         } catch (Exception e) {
             if (conn != null) {
                 try {
                     conn.rollback();
-                    conn.setAutoCommit(true);
-                    conn.close();
                 } catch (Exception ex) {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
             }
             logger.error("Errore nella cancellazione dei protocolli: {}", e.getMessage(), e);
-            result.put("success", false);
-            result.put("message", "Errore: " + e.getMessage());
+            throw new Exception("Errore nella cancellazione: " + e.getMessage(), e);
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResources(null, stmt, conn);
         }
-
-        return result;
     }
 
     /**
@@ -750,66 +402,6 @@ public class OracleService {
     }
 
     /**
-     * Costruisce la query BUCHI DI PROTOCOLLO con UNION di tutti gli schemi
-     */
-    private String buildQueryBuchiProtocollo() {
-        return "SELECT 'SOGEI', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM sogei_asp.p2_protocollo p2 " +
-               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL AND p2.errore IS NOT NULL " +
-               "AND p2.data_ins>to_date('04/06/2024 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
-               "AND (SELECT count(*) FROM sogei_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
-               "UNION " +
-               "SELECT 'CONSIP', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM consip_asp.p2_protocollo p2 " +
-               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL AND p2.errore IS NOT NULL " +
-               "AND p2.data_ins>to_date('04/06/2024 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
-               "AND (SELECT count(*) FROM consip_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
-               "UNION " +
-               "SELECT 'DEMANIO', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM dem_asp.p2_protocollo p2 " +
-               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL AND p2.errore IS NOT NULL " +
-               "AND p2.data_ins>to_date('04/06/2024 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
-               "AND (SELECT count(*) FROM dem_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
-               "UNION " +
-               "SELECT 'ACN', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM acn_asp.p2_protocollo p2 " +
-               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
-               "AND (SELECT count(*) FROM acn_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
-               "UNION " +
-               "SELECT 'AAMS', count(*), substr(errore,0,400), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM aams_asp.p2_protocollo p2 " +
-               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
-               "AND (SELECT count(*) FROM aams_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,0,400), numero_protocollo, id_aoo, codice_aoo " +
-               "UNION " +
-               "SELECT 'EQUI', count(*), substr(errore,0,200), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM equi_asp.p2_protocollo p2 " +
-               "WHERE p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
-               "AND p2.data_ins>to_date('01/01/2025 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
-               "AND (SELECT count(*) FROM equi_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,0,200), numero_protocollo, id_aoo, codice_aoo " +
-               "UNION " +
-               "SELECT 'ENTRATE', count(*), substr(errore,10,400), min(id), numero_protocollo, id_aoo, codice_aoo, min(data_ins), max(data_ins) FROM (" +
-               "SELECT p2.errore, p2.sequ_long_id ID, p2.numero_protocollo, p2.id_aoo, p2.id_registro, p2.data_ins,p2.codice_aoo " +
-               "FROM entr_asp.p2_protocollo p2 " +
-               "WHERE p2.codice_aoo NOT IN ('DPTEST') AND p2.fk_profilo_doc_proto IS NULL AND p2.numero_protocollo IS NOT NULL " +
-               "AND p2.errore IS NOT NULL AND p2.data_ins>to_date('25/11/2025 00:00:00','dd/mm/yyyy hh24:mi:ss') " +
-               "AND (SELECT count(*) FROM entr_asp.d_profilo_doc_proto pdp WHERE pdp.fk_aoo=p2.id_aoo AND pdp.data_protocollo=trunc(p2.data_protocollo) AND pdp.nume_protocollo=p2.numero_protocollo AND pdp.fk_registri=p2.id_registro)=0 " +
-               ") GROUP BY substr(errore,10,400), numero_protocollo, id_aoo, codice_aoo " +
-               "ORDER BY 1,3,4";
-    }
-
-    /**
      * Chiude le risorse in modo sicuro
      */
     private void closeResources(ResultSet rs, Statement stmt, Connection conn) {
@@ -819,45 +411,6 @@ public class OracleService {
             if (conn != null) conn.close();
         } catch (SQLException e) {
             logger.error("Errore nella chiusura delle risorse: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * Disabilita la verifica SSL per chiamate HTTPS (SOLO PER DEVELOPMENT/TESTING)
-     * ⚠️ ATTENZIONE: Non usare in produzione!
-     */
-    private static void disableSSLVerification() {
-        try {
-            // Crea un TrustManager che accetta tutti i certificati
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                    }
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                    }
-                }
-            };
-
-            // Installa il TrustManager che accetta tutti i certificati
-            SSLContext sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-
-            // Crea un HostnameVerifier che accetta tutti gli hostname
-            HostnameVerifier allHostsValid = new HostnameVerifier() {
-                public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                }
-            };
-
-            // Installa il HostnameVerifier
-            HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Errore nella disabilitazione SSL: " + e.getMessage(), e);
         }
     }
 
@@ -913,9 +466,6 @@ public class OracleService {
 
             logger.info("Cancellazione protocollo temporaneo {} - {} record interessati", sequLongId, total);
 
-            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK (come deleteSchedulingData)
-            TransactionService.saveConnection(conn);
-
             result.put("success", true);
             result.put("message", "Cancellazione in sospeso - In attesa di Commit/Rollback");
             result.put("recordsAffected", total);
@@ -923,12 +473,13 @@ public class OracleService {
             result.put("ente", nomeEnte);
             result.put("sequLongId", sequLongId);
 
+            // NON fare commit, rimane in sospeso
+            conn.setAutoCommit(true);
+
         } catch (Exception e) {
             if (conn != null) {
                 try {
                     conn.rollback();
-                    conn.setAutoCommit(true);
-                    conn.close();
                 } catch (Exception ex) {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
@@ -937,68 +488,73 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResources(null, stmt, conn);
         }
 
         return result;
     }
 
     /**
-     * Esegue operazioni varie INSERT/UPDATE/DELETE senza autocommit
-     * Restituisce il numero di record impattati per ogni operazione
+     * Inserisci i dati P.S. Riservati per tutti gli enti
      */
-    public Map<String, Object> executeVariousOperations() throws Exception {
+    public Map<String, Object> insertPsRiservati(int giorni) throws Exception {
         Connection conn = null;
         Statement stmt = null;
         Map<String, Object> result = new HashMap<>();
-        List<Map<String, Object>> operations = new ArrayList<>();
 
         try {
             conn = getConnection();
             stmt = conn.createStatement();
 
+            logger.info("Inizio inserimento P.S. Riservati (giorni: {})", giorni);
+
             // Disabilita autocommit
             conn.setAutoCommit(false);
 
-            logger.info("Inizio esecuzione operazioni varie (senza autocommit)");
+            // Query per tutti gli enti
+            String[] insertQueries = {
+                buildInsertPsRiservatiQuery("dem_asp", giorni),      // DEMANIO
+                buildInsertPsRiservatiQuery("aams_asp", giorni),     // AAMS
+                buildInsertPsRiservatiQuery("consip_asp", giorni),   // CONSIP
+                buildInsertPsRiservatiQuery("sogei_asp", giorni),    // SOGEI
+                buildInsertPsRiservatiQuery("entr_asp", giorni)      // ENTRATE
+            };
 
-            // Query 1: BACKUP ACN - INSERT UTENTI_UFFICI
-            String query1 = "INSERT INTO sesamo.utenti_uffici_bck (id_utente,id_ufficio,data_inizio,data_fine,flg_usr_vir,flag_prot_reg,flag_prot_out,flag_default,flag_prot_in,bozza_flg) " +
-                           "SELECT suu.id_utente,suu.id_ufficio,suu.data_inizio,suu.data_fine,suu.flg_usr_vir,suu.flag_prot_reg,suu.flag_prot_out,suu.flag_default,suu.flag_prot_in, " +
-                           "to_number(to_char(sysdate,'yyyymmddhh24miss')) " +
-                           "FROM sesamo.utenti_uffici suu, sesamo.uffici suf " +
-                           "WHERE suu.id_ufficio=suf.id_ufficio AND suf.id_ente=15";
+            String[] enti = {"DEMANIO", "AAMS", "CONSIP", "SOGEI", "ENTRATE"};
+            int totalRecords = 0;
+            List<Map<String, Object>> entityResults = new ArrayList<>();
 
-            int rows1 = stmt.executeUpdate(query1);
-            Map<String, Object> op1 = new HashMap<>();
-            op1.put("label", "BACKUP ACN: INSERT UTENTI_UFFICI");
-            op1.put("recordsAffected", rows1);
-            operations.add(op1);
-            logger.info("Query 1 completata: {} record", rows1);
+            for (int i = 0; i < insertQueries.length; i++) {
+                try {
+                    int rowsInserted = stmt.executeUpdate(insertQueries[i]);
+                    totalRecords += rowsInserted;
+                    
+                    Map<String, Object> entityResult = new HashMap<>();
+                    entityResult.put("ente", enti[i]);
+                    entityResult.put("recordsInserted", rowsInserted);
+                    entityResults.add(entityResult);
+                    
+                    logger.info("Inserimento P.S. Riservati {} - {} record", enti[i], rowsInserted);
+                } catch (Exception e) {
+                    logger.error("Errore nell'inserimento per {}: {}", enti[i], e.getMessage());
+                    Map<String, Object> entityResult = new HashMap<>();
+                    entityResult.put("ente", enti[i]);
+                    entityResult.put("recordsInserted", 0);
+                    entityResult.put("error", e.getMessage());
+                    entityResults.add(entityResult);
+                }
+            }
 
-            // Query 2: BACKUP ACN - INSERT UTENTI_RUOLI_APP
-            String query2 = "INSERT INTO sesamo.utenti_ruoli_applic_appo (id_ruolo_app,id_utente,id_ente,id_aoo,id_utente_ass,data_inizio,id_utente_fine_ass,data_fine,id_ufficio,flag_default,bozza_flg) " +
-                           "SELECT id_ruolo_app,id_utente,id_ente,id_aoo,id_utente_ass,data_inizio,id_utente_fine_ass,data_fine,id_ufficio,flag_default,to_number(to_char(sysdate,'yyyymmddhh24miss')) " +
-                           "FROM sesamo.utenti_ruoli_applicativi uro " +
-                           "WHERE uro.id_ente=15";
-
-            int rows2 = stmt.executeUpdate(query2);
-            Map<String, Object> op2 = new HashMap<>();
-            op2.put("label", "BACKUP ACN: INSERT UTENTI_RUOLI_APP");
-            op2.put("recordsAffected", rows2);
-            operations.add(op2);
-            logger.info("Query 2 completata: {} record", rows2);
-
-            int totalRecords = rows1 + rows2;
-            logger.info("Operazioni completate - Totale {} record interessati", totalRecords);
+            logger.info("Inserimento P.S. Riservati completato - {} record totali", totalRecords);
 
             // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
             TransactionService.saveConnection(conn);
 
             result.put("success", true);
-            result.put("message", "Operazioni in sospeso - In attesa di Commit/Rollback");
+            result.put("message", "Inserimento P.S. Riservati in sospeso - In attesa di Commit/Rollback");
             result.put("totalRecords", totalRecords);
-            result.put("operations", operations);
+            result.put("entities", entityResults);
+            result.put("giorni", giorni);
 
         } catch (Exception e) {
             if (conn != null) {
@@ -1010,7 +566,7 @@ public class OracleService {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
             }
-            logger.error("Errore nell'esecuzione delle operazioni varie: {}", e.getMessage(), e);
+            logger.error("Errore nell'inserimento P.S. Riservati: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
@@ -1021,13 +577,23 @@ public class OracleService {
     }
 
     /**
-     * Lancia le URL dei task in background con delay di 5 secondi tra una e l'altra
+     * Costruisce la query INSERT per P.S. Riservati di uno specifico ente
      */
+    private String buildInsertPsRiservatiQuery(String schema, int giorni) {
+        return "INSERT INTO " + schema + ".d_pronto_soccorso_malati " +
+               "(sequ_long_id, fk_profilo_doc_proto, data_inserimento, esito, fk_aoo) " +
+               "SELECT " + schema + ".s_d_pronto_soccorso_malati.NEXTVAL, " +
+               "pdp.sequ_long_id, SYSDATE, 0, pdp.fk_aoo " +
+               "FROM " + schema + ".d_profilo_doc_proto pdp " +
+               "WHERE (pdp.flag_riservato_01=1 OR pdp.flag_presenza_dati_sensibili=1) " +
+               "AND pdp.fk_ufficio_protocollo IS NOT NULL " +
+               "AND pdp.data_protocollo > SYSDATE-60 " +
+               "AND (pdp.data_protocollo > SYSDATE-" + giorni + " " +
+               "OR (SELECT COUNT(*) FROM " + schema + ".d_attivita dat " +
+               "WHERE dat.fk_documento=pdp.sequ_long_id " +
+               "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
+    }
     public void launchTaskUrls() {
-        // ⚠️ DISABILITA VERIFICA SSL (solo per development/testing)
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
         String[] urls = {
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
@@ -1037,41 +603,27 @@ public class OracleService {
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
             "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
         };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        // Esegui tutte le URL in un SINGOLO thread per lanciarle SEQUENZIALMENTE
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
+        
+        logger.info("Lancio {} URL di task in background", urls.length);
+        
+        // Esegui ogni URL in un thread separato (background)
+        for (String url : urls) {
+            new Thread(() -> {
                 try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
+                    logger.info("Richiamando URL in background: {}", url);
                     java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
+                    java.net.HttpURLConnection conn = (java.net.HttpURLConnection) urlObj.openConnection();
                     conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
+                    conn.setConnectTimeout(5000);
+                    conn.setReadTimeout(5000);
                     int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
+                    logger.info("Risposta da {}: {}", url, responseCode);
                     conn.disconnect();
-
-                    // DELAY di 5 secondi prima della prossima URL (tranne dopo l'ultima)
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000); // 5000 ms = 5 secondi
-                    }
-
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
                 } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                    // Continua con la prossima URL anche in caso di errore
+                    logger.error("Errore nel richiamare {}: {}", url, e.getMessage());
                 }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
+            }).start();
+        }
     }
 
     /**
