@@ -41,27 +41,41 @@ public class OracleService {
     private String dbDriver;
 
     /**
-     * Ottiene la connessione al database Oracle
+     * Ottiene la connessione al database Oracle con retry
      */
     public Connection getConnection() throws Exception {
-        try {
-            Class.forName(dbDriver);
-            logger.debug("Connessione a Oracle: {}", dbUrl);
-            
-            // Aggiungi timeout alla connessione
-            java.util.Properties props = new java.util.Properties();
-            props.setProperty("user", dbUser);
-            props.setProperty("password", dbPassword);
-            props.setProperty("oracle.net.CONNECT_TIMEOUT", "10000"); // 10 secondi
-            props.setProperty("oracle.jdbc.ReadTimeout", "30000"); // 30 secondi
-            
-            Connection conn = DriverManager.getConnection(dbUrl, props);
-            logger.info("Connessione effettuata con successo");
-            return conn;
-        } catch (Exception e) {
-            logger.error("Errore nella connessione al database: {}", e.getMessage(), e);
-            throw new Exception("Errore di connessione: " + e.getMessage(), e);
+        int maxRetries = 3;
+        int retryCount = 0;
+        Exception lastException = null;
+
+        while (retryCount < maxRetries) {
+            try {
+                Class.forName(dbDriver);
+                logger.debug("Connessione a Oracle: {}", dbUrl);
+                
+                java.util.Properties props = new java.util.Properties();
+                props.setProperty("user", dbUser);
+                props.setProperty("password", dbPassword);
+                props.setProperty("oracle.net.CONNECT_TIMEOUT", "10000");
+                props.setProperty("oracle.jdbc.ReadTimeout", "60000");
+                props.setProperty("v$session.program", "Salvavita");
+                
+                Connection conn = DriverManager.getConnection(dbUrl, props);
+                logger.info("Connessione effettuata con successo");
+                return conn;
+            } catch (Exception e) {
+                lastException = e;
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    logger.warn("Errore di connessione (tentativo {}/{}): {}", retryCount, maxRetries, e.getMessage());
+                    Thread.sleep(1000 * retryCount); // Aumenta il delay con ogni retry
+                } else {
+                    logger.error("Errore nella connessione al database dopo {} tentativi: {}", maxRetries, e.getMessage(), e);
+                }
+            }
         }
+        
+        throw new Exception("Errore di connessione dopo " + maxRetries + " tentativi: " + lastException.getMessage(), lastException);
     }
 
     /**
