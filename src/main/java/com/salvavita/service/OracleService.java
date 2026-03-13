@@ -1140,7 +1140,7 @@ public class OracleService {
         }
         return result;
     }
-}
+
     /**
      * Inserisci i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
      */
@@ -1230,3 +1230,5 @@ public class OracleService {
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
                "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
     }
+    
+}

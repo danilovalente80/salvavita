@@ -324,7 +324,7 @@ public class QueryController {
         }
     }
 
-    /**
+    
     /**
      * POST /api/insert-ps-riservati
      * Inserisce i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
@@ -347,6 +347,7 @@ public class QueryController {
         }
     }
 
+    /**
      * POST /api/commit-transaction
      * Esegui il commit di tutte le operazioni in sospeso
      */
