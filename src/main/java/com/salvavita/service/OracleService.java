@@ -1169,15 +1169,17 @@ public class OracleService {
                 String label = queryInfo[0];
                 String query = queryInfo[1];
                 try {
+                    logger.info("=== ESECUZIONE QUERY: {} ===", label);
+                    logger.info("Query: {}", query);
                     int rowsInserted = stmt.executeUpdate(query);
                     totalRecords += rowsInserted;
                     Map<String, Object> op = new HashMap<>();
                     op.put("label", label);
                     op.put("recordsAffected", rowsInserted);
                     operations.add(op);
-                    logger.info("{} completato: {} record", label, rowsInserted);
+                    logger.info("✅ {} completato: {} record", label, rowsInserted);
                 } catch (Exception e) {
-                    logger.error("Errore nell'inserimento {}: {}", label, e.getMessage());
+                    logger.error("❌ Errore nell'inserimento {}: {}", label, e.getMessage(), e);
                     Map<String, Object> op = new HashMap<>();
                     op.put("label", label);
                     op.put("recordsAffected", 0);
