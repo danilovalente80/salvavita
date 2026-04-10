@@ -106,8 +106,6 @@ function refreshProtocolliSospesi() {
 // ELIMINA PROTOCOLLI PER ENTE
 function deleteProtocolliByEnte(ente) {
     // Chiedi conferma
-    if (!confirm(`Sei sicuro di voler eliminare i protocolli in transizione per l'ente: ${ente}?`)) {
-        return;
     }
 
     const loadingDiv = document.getElementById('protocolliLoading');

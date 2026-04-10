@@ -145,8 +145,6 @@ function buildDemoneRow(demone, schema) {
 
 // RIAVVIA DEMONE
 function riavviaDemone(schema, ente) {
-    if (!confirm(`Sei sicuro di voler riavviare il demone per ${ente}?`)) {
-        return;
     }
 
     const loadingDiv = document.getElementById('processiLoading');
