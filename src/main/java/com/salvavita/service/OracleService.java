@@ -989,9 +989,14 @@ public class OracleService {
             operations.add(op2);
             logger.info("Query 2 completata: {} record", rows2);
 
-            int totalRecords = rows1 + rows2;
-            logger.info("Operazioni completate - Totale {} record interessati", totalRecords);
+            TransactionService.saveConnection(conn);
 
+            result.put("success", true);
+            result.put("message", "Operazioni in sospeso - In attesa di Commit/Rollback");
+            result.put("totalRecords", totalDeleteRecords);
+            result.put("operations", operations);
+
+            return result;
             // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
             TransactionService.saveConnection(conn);
 
