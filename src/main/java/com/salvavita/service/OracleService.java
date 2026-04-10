@@ -655,7 +655,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM sogei_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM sogei_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('06/05/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'CONSIP' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM consip_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -670,7 +670,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM consip_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM consip_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('20/04/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'DEMANIO' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM dem_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -685,7 +685,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM dem_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM dem_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('10/07/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'ACN' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM acn_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -700,7 +700,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM acn_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM acn_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('20/04/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'EQUI' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM equi_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -715,7 +715,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM equi_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM equi_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('25/06/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'AAMS' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM aams_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -730,7 +730,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM aams_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM aams_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('11/07/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'ENTRATE' ENTE, pt.sequ_long_id, NVL(pt.count_recuperi_ejb,0), pt.presa_visione, " +
                "(SELECT count(*) FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -745,7 +745,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM entr_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('27/02/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "ORDER BY 1, 2";
     }
 
