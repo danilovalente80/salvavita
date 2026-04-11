@@ -1069,8 +1069,6 @@ public class OracleService {
             conn.close();
             
             // LANCIA LE URL DOPO IL COMMIT
-            launchTaskUrls();
-            
             TransactionService.removeConnection();
 
             result.put("success", true);
@@ -1109,6 +1107,7 @@ public class OracleService {
             TransactionService.removeConnection();
         }
         return result;
+    }
     public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
         Connection conn = null;
         Statement stmt = null;
@@ -1201,5 +1200,5 @@ public class OracleService {
                "OR (SELECT COUNT(*) FROM " + schema + ".d_attivita dat " +
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
                "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
-    }
-}}
+}
+}
