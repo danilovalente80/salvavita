@@ -1202,4 +1202,4 @@ public class OracleService {
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
                "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
     }
-}
+}}
