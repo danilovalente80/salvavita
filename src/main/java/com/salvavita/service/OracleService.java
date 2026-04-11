@@ -989,14 +989,42 @@ public class OracleService {
             operations.add(op2);
             logger.info("Query 2 completata: {} record", rows2);
 
-            TransactionService.saveConnection(conn);
+            // Query 3-9: DELETE COLLEGATI_DOC_PROTO con fk nullo per tutti gli enti
+            String[][] deleteQueries = {
+                {"DELETE ENTRATE: d_collegati_doc_proto", "DELETE FROM entr_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
+                {"DELETE CONSIP: d_collegati_doc_proto", "DELETE FROM consip_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
+                {"DELETE AAMS: d_collegati_doc_proto", "DELETE FROM aams_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
+                {"DELETE DEMANIO: d_collegati_doc_proto", "DELETE FROM dem_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
+                {"DELETE SOGEI: d_collegati_doc_proto", "DELETE FROM sogei_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
+                {"DELETE EQUI: d_collegati_doc_proto", "DELETE FROM equi_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"}
+            };
 
-            result.put("success", true);
-            result.put("message", "Operazioni in sospeso - In attesa di Commit/Rollback");
-            result.put("totalRecords", totalDeleteRecords);
-            result.put("operations", operations);
+            int totalRecords = rows1 + rows2;
 
-            return result;
+            for (String[] deleteInfo : deleteQueries) {
+                String label = deleteInfo[0];
+                String query = deleteInfo[1];
+                try {
+                    logger.info("Esecuzione DELETE: {}", label);
+                    int rowsDeleted = stmt.executeUpdate(query);
+                    totalRecords += rowsDeleted;
+                    Map<String, Object> opDelete = new HashMap<>();
+                    opDelete.put("label", label);
+                    opDelete.put("recordsAffected", rowsDeleted);
+                    operations.add(opDelete);
+                    logger.info("✅ {} completato: {} record eliminati", label, rowsDeleted);
+                } catch (Exception e) {
+                    logger.error("❌ Errore in {}: {}", label, e.getMessage());
+                    Map<String, Object> opDelete = new HashMap<>();
+                    opDelete.put("label", label);
+                    opDelete.put("recordsAffected", 0);
+                    opDelete.put("error", e.getMessage());
+                    operations.add(opDelete);
+                }
+            }
+
+            logger.info("Tutte le operazioni completate - Totale {} record interessati", totalRecords);
+
             // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
             TransactionService.saveConnection(conn);
 
@@ -1024,131 +1052,6 @@ public class OracleService {
 
         return result;
     }
-
-    /**
-     * Lancia le URL dei task in background con delay di 5 secondi tra una e l'altra
-     */
-    public void launchTaskUrls() {
-        // ⚠️ DISABILITA VERIFICA SSL (solo per development/testing)
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        // Esegui tutte le URL in un SINGOLO thread per lanciarle SEQUENZIALMENTE
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    // DELAY di 5 secondi prima della prossima URL (tranne dopo l'ultima)
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000); // 5000 ms = 5 secondi
-                    }
-
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                    // Continua con la prossima URL anche in caso di errore
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
-
-    /**
-     * Esegui il COMMIT di tutte le operazioni in sospeso
-     * Se è un task scheduling, lancia anche le URL
-     */
-    public Map<String, Object> commitTransaction() throws Exception {
-        Map<String, Object> result = new HashMap<>();
-        Connection conn = TransactionService.getConnection();
-        
-        try {
-            if (conn == null || conn.isClosed()) {
-                result.put("success", false);
-                result.put("message", "Nessuna transazione in sospeso");
-                return result;
-            }
-
-            logger.info("COMMIT di tutte le operazioni");
-            conn.commit();
-            conn.setAutoCommit(true);
-            conn.close();
-            
-            // LANCIA LE URL DOPO IL COMMIT
-            launchTaskUrls();
-            
-            TransactionService.removeConnection();
-
-            result.put("success", true);
-            result.put("message", "COMMIT eseguito con successo - Task lanciati in background");
-        } catch (Exception e) {
-            logger.error("Errore nel commit: {}", e.getMessage());
-            result.put("success", false);
-            result.put("message", "Errore nel commit: " + e.getMessage());
-            TransactionService.removeConnection();
-        }
-        return result;
-    }
-
-    /**
-     * Esegui il ROLLBACK di tutte le operazioni in sospeso
-     */
-    public Map<String, Object> rollbackTransaction() throws Exception {
-        Map<String, Object> result = new HashMap<>();
-        Connection conn = TransactionService.getConnection();
-        
-        try {
-            if (conn == null || conn.isClosed()) {
-                result.put("success", false);
-                result.put("message", "Nessuna transazione in sospeso");
-                return result;
-            }
-
-            logger.info("ROLLBACK di tutte le operazioni");
-            conn.rollback();
-            conn.setAutoCommit(true);
-            conn.close();
-            TransactionService.removeConnection();
-
-            result.put("success", true);
-            result.put("message", "ROLLBACK eseguito con successo");
-        } catch (Exception e) {
-            logger.error("Errore nel rollback: {}", e.getMessage());
-            result.put("success", false);
-            result.put("message", "Errore nel rollback: " + e.getMessage());
-            TransactionService.removeConnection();
-        }
-        return result;
-    }
-
-    /**
-     * Inserisci P.S. Riservati per tutti gli enti (con parametro giorni)
-     */
     public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
         Connection conn = null;
         Statement stmt = null;
