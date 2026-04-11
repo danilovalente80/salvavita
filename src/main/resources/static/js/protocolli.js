@@ -105,9 +105,6 @@ function refreshProtocolliSospesi() {
 
 // ELIMINA PROTOCOLLI PER ENTE
 function deleteProtocolliByEnte(ente) {
-    // Chiedi conferma
-    }
-
     const loadingDiv = document.getElementById('protocolliLoading');
     const errorDiv = document.getElementById('protocolliError');
 
