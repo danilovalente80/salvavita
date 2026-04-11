@@ -1076,7 +1076,6 @@ public class OracleService {
 
     /**
      * Esegui il COMMIT di tutte le operazioni in sospeso
-     * Se è un task scheduling, lancia anche le URL
      */
     public Map<String, Object> commitTransaction() throws Exception {
         Map<String, Object> result = new HashMap<>();
@@ -1094,13 +1093,10 @@ public class OracleService {
             conn.setAutoCommit(true);
             conn.close();
             
-            // LANCIA LE URL DOPO IL COMMIT
-            launchTaskUrls();
-            
             TransactionService.removeConnection();
 
             result.put("success", true);
-            result.put("message", "COMMIT eseguito con successo - Task lanciati in background");
+            result.put("message", "COMMIT eseguito con successo");
         } catch (Exception e) {
             logger.error("Errore nel commit: {}", e.getMessage());
             result.put("success", false);
@@ -1109,7 +1105,8 @@ public class OracleService {
         }
         return result;
     }
-
+    
+    
     /**
      * Esegui il ROLLBACK di tutte le operazioni in sospeso
      */
@@ -1140,7 +1137,7 @@ public class OracleService {
         }
         return result;
     }
-}
+
     /**
      * Inserisci i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
      */
@@ -1230,3 +1227,93 @@ public class OracleService {
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
                "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
     }
+    
+    
+    /**
+     * Inserisci P.S. Riservati per tutti gli enti (con parametro giorni)
+     */
+    public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
+        Connection conn = null;
+        Statement stmt = null;
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> operations = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            logger.info("Inizio inserimento P.S. Riservati (giorni: {}) - senza autocommit", giorni);
+
+            // Array di query per tutti gli enti
+            String[][] queriesPerEnte = {
+                {"P.S. Riservati DEMANIO", buildInsertPsRiservatiQuery("dem_asp", giorni)},
+                {"P.S. Riservati AAMS", buildInsertPsRiservatiQuery("aams_asp", giorni)},
+                {"P.S. Riservati CONSIP", buildInsertPsRiservatiQuery("consip_asp", giorni)},
+                {"P.S. Riservati SOGEI", buildInsertPsRiservatiQuery("sogei_asp", giorni)},
+                {"P.S. Riservati ENTRATE", buildInsertPsRiservatiQuery("entr_asp", giorni)}
+            };
+
+            int totalRecords = 0;
+
+            for (String[] queryInfo : queriesPerEnte) {
+                String label = queryInfo[0];
+                String query = queryInfo[1];
+                
+                try {
+                    int rowsInserted = stmt.executeUpdate(query);
+                    totalRecords += rowsInserted;
+                    
+                    Map<String, Object> op = new HashMap<>();
+                    op.put("label", label);
+                    op.put("recordsAffected", rowsInserted);
+                    operations.add(op);
+                    
+                    logger.info("{} completato: {} record", label, rowsInserted);
+                } catch (Exception e) {
+                    logger.error("Errore nell'inserimento {}: {}", label, e.getMessage());
+                    Map<String, Object> op = new HashMap<>();
+                    op.put("label", label);
+                    op.put("recordsAffected", 0);
+                    op.put("error", e.getMessage());
+                    operations.add(op);
+                }
+            }
+
+            logger.info("Inserimento P.S. Riservati completato - Totale {} record", totalRecords);
+
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            TransactionService.saveConnection(conn);
+
+            result.put("success", true);
+            result.put("message", "Inserimento P.S. Riservati in sospeso - In attesa di Commit/Rollback");
+            result.put("totalRecords", totalRecords);
+            result.put("operations", operations);
+            result.put("giorni", giorni);
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (Exception ex) {
+                    logger.error("Errore nel rollback: {}", ex.getMessage());
+                }
+            }
+            logger.error("Errore nell'inserimento P.S. Riservati: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Errore: " + e.getMessage());
+        } finally {
+            closeResources(null, stmt, null);
+        }
+
+        return result;
+    }
+
+   
+    
+
+}

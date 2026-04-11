@@ -273,13 +273,12 @@ public class QueryController {
 
     /**
      * POST /api/avvia-processi
-     * Cancella i dati di scheduling (SENZA AUTO-COMMIT)
-     * Le URL verranno lanciate solo al COMMIT
+     * Cancella i dati di scheduling e lancia le URL
      */
     @PostMapping("/avvia-processi")
     public ResponseEntity<?> avviaProcessi() {
         try {
-            logger.info("Richiesta POST /avvia-processi - Cancellazione dati (lancio URL al commit)");
+            logger.info("Richiesta POST /avvia-processi - Cancellazione dati e lancio URL");
             
             // Primo: Cancella i dati di scheduling
             Map<String, Object> deleteResult = oracleService.deleteSchedulingData();
@@ -288,13 +287,20 @@ public class QueryController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(deleteResult);
             }
+            
+            // Secondo: Esegui il COMMIT della transazione
+            Map<String, Object> commitResult = oracleService.commitTransaction();
+            
+            // Terzo: Lancia le URL
+            oracleService.launchTaskUrls();
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "Cancellazione dati scheduling in sospeso - In attesa di Commit/Rollback");
+            response.put("message", "Cancellazione dati scheduling completata - URL lanciate in background");
             response.put("recordsAffected", deleteResult.get("recordsAffected"));
             response.put("queries", deleteResult.get("queries"));
-            response.put("note", "Le URL verranno lanciate solo al COMMIT");
+            response.put("commitResult", commitResult);
+            response.put("note", "Le 7 URL sono state lanciate in background con delay di 5 secondi");
             
             return ResponseEntity.ok(response);
             
@@ -304,7 +310,6 @@ public class QueryController {
                     .body(new ErrorResponse("Errore nell'avvio dei processi", e.getMessage()));
         }
     }
-
     /**
      * POST /api/delete-protocolli
      * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTO-COMMIT)
