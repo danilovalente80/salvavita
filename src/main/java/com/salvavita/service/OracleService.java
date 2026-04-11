@@ -41,51 +41,6 @@ public class OracleService {
     private String dbDriver;
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Ottiene la connessione al database Oracle
      */
     public Connection getConnection() throws Exception {
@@ -110,51 +65,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue la query PROTOCOLLI_SOSPESI
      */
     public List<ProtocolliSospesi> getProtocolliSospesi() throws Exception {
@@ -211,51 +121,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue la query SCHED_ARCIPELAGO_TASK per prossimi run
      */
     public List<Map<String, Object>> getScheduledTasks() throws Exception {
@@ -302,51 +167,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue la query BUCHI DI PROTOCOLLO
      */
     public List<BuchiProtocollo> getBuchiProtocollo() throws Exception {
@@ -406,51 +226,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue tutte le query per il controllo processi con una SINGOLA connessione
      * per evitare ORA-02391: exceeded simultaneous SESSIONS_PER_USER limit
      */
@@ -557,51 +332,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue la query ALLINEAMENTI PROCESSI
      */
     public List<AllineamentoProcesso> getAllineamentiProcessi() throws Exception {
@@ -645,51 +375,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue la query DEMONE MAIL SENDER SOGEI
      */
     public DemoneMailSender getDemoneMailSenderSogei() throws Exception {
@@ -697,51 +382,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue la query DEMONE MAIL SENDER ENTRATE
      */
     public DemoneMailSender getDemoneMailSenderEntrate() throws Exception {
@@ -749,51 +389,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Metodo helper per query demone mail sender
      */
     private DemoneMailSender getDemoneMailSender(String schema, String ente) throws Exception {
@@ -843,51 +438,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Riavvia il demone mail sender per uno schema specifico
      */
     public Map<String, Object> riavviaDemoneMailSender(String schema) throws Exception {
@@ -941,51 +491,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Cancella i dati dalle tabelle di scheduling (SENZA AUTO-COMMIT)
      */
     public Map<String, Object> deleteSchedulingData() throws Exception {
@@ -1040,51 +545,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTOCOMMIT)
      */
     public Map<String, Object> deleteProtocolliInTransizione(String nomeEnte) throws Exception {
@@ -1178,51 +638,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Costruisce la query PROTOCOLLI_SOSPESI con UNION di tutti gli schemi
      * NOTA: Compatibile con Java 8 (senza triple virgolette)
      */
@@ -1240,7 +655,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM sogei_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM sogei_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('06/05/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'CONSIP' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM consip_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -1255,7 +670,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM consip_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM consip_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('20/04/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'DEMANIO' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM dem_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -1270,7 +685,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM dem_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM dem_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('10/07/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'ACN' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM acn_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -1285,7 +700,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM acn_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM acn_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('20/04/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'EQUI' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM equi_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -1300,7 +715,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM equi_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM equi_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('25/06/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'AAMS' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM aams_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -1315,7 +730,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM aams_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM aams_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('11/07/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'ENTRATE' ENTE, pt.sequ_long_id, NVL(pt.count_recuperi_ejb,0), pt.presa_visione, " +
                "(SELECT count(*) FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -1330,56 +745,11 @@ public class OracleService {
                "AND (SELECT count(*) FROM entr_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('27/02/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "ORDER BY 1, 2";
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Costruisce la query BUCHI DI PROTOCOLLO con UNION di tutti gli schemi
      */
     private String buildQueryBuchiProtocollo() {
@@ -1440,51 +810,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Chiude le risorse in modo sicuro
      */
     private void closeResources(ResultSet rs, Statement stmt, Connection conn) {
@@ -1498,51 +823,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Disabilita la verifica SSL per chiamate HTTPS (SOLO PER DEVELOPMENT/TESTING)
      * ⚠️ ATTENZIONE: Non usare in produzione!
      */
@@ -1582,51 +862,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Elimina un protocollo temporaneo e i suoi dati correlati (SENZA AUTO-COMMIT)
      */
     public Map<String, Object> deleteProtoTemporaneo(String nomeEnte, long sequLongId) throws Exception {
@@ -1709,51 +944,6 @@ public class OracleService {
     }
 
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
      * Esegue operazioni varie INSERT/UPDATE/DELETE senza autocommit
      * Restituisce il numero di record impattati per ogni operazione
      */
@@ -1799,41 +989,8 @@ public class OracleService {
             operations.add(op2);
             logger.info("Query 2 completata: {} record", rows2);
 
-            // Query 3-9: DELETE COLLEGATI_DOC_PROTO con fk nullo per tutti gli enti
-            String[][] deleteQueries = {
-                {"DELETE ENTRATE: d_collegati_doc_proto", "DELETE FROM entr_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
-                {"DELETE CONSIP: d_collegati_doc_proto", "DELETE FROM consip_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
-                {"DELETE AAMS: d_collegati_doc_proto", "DELETE FROM aams_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
-                {"DELETE DEMANIO: d_collegati_doc_proto", "DELETE FROM dem_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
-                {"DELETE SOGEI: d_collegati_doc_proto", "DELETE FROM sogei_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"},
-                {"DELETE EQUI: d_collegati_doc_proto", "DELETE FROM equi_asp.d_collegati_doc_proto cdp WHERE cdp.fk_profilo_doc_proto_right IN (0) OR cdp.fk_profilo_doc_proto_left IN (0)"}
-            };
-
             int totalRecords = rows1 + rows2;
-
-            for (String[] deleteInfo : deleteQueries) {
-                String label = deleteInfo[0];
-                String query = deleteInfo[1];
-                try {
-                    logger.info("Esecuzione DELETE: {}", label);
-                    int rowsDeleted = stmt.executeUpdate(query);
-                    totalRecords += rowsDeleted;
-                    Map<String, Object> opDelete = new HashMap<>();
-                    opDelete.put("label", label);
-                    opDelete.put("recordsAffected", rowsDeleted);
-                    operations.add(opDelete);
-                    logger.info("✅ {} completato: {} record eliminati", label, rowsDeleted);
-                } catch (Exception e) {
-                    logger.error("❌ Errore in {}: {}", label, e.getMessage());
-                    Map<String, Object> opDelete = new HashMap<>();
-                    opDelete.put("label", label);
-                    opDelete.put("recordsAffected", 0);
-                    opDelete.put("error", e.getMessage());
-                    operations.add(opDelete);
-                }
-            }
-
-            logger.info("Tutte le operazioni completate - Totale {} record interessati", totalRecords);
+            logger.info("Operazioni completate - Totale {} record interessati", totalRecords);
 
             // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
             TransactionService.saveConnection(conn);
@@ -1862,6 +1019,65 @@ public class OracleService {
 
         return result;
     }
+
+    /**
+     * Lancia le URL dei task in background con delay di 5 secondi tra una e l'altra
+     */
+    public void launchTaskUrls() {
+        // ⚠️ DISABILITA VERIFICA SSL (solo per development/testing)
+        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
+        disableSSLVerification();
+
+        String[] urls = {
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
+            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
+        };
+
+        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
+
+        // Esegui tutte le URL in un SINGOLO thread per lanciarle SEQUENZIALMENTE
+        new Thread(() -> {
+            for (int i = 0; i < urls.length; i++) {
+                String url = urls[i];
+                try {
+                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
+                    java.net.URL urlObj = new java.net.URL(url);
+                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setConnectTimeout(10000);
+                    conn.setReadTimeout(10000);
+                    int responseCode = conn.getResponseCode();
+                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
+                    conn.disconnect();
+
+                    // DELAY di 5 secondi prima della prossima URL (tranne dopo l'ultima)
+                    if (i < urls.length - 1) {
+                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
+                        Thread.sleep(5000); // 5000 ms = 5 secondi
+                    }
+
+                } catch (InterruptedException e) {
+                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
+                    // Continua con la prossima URL anche in caso di errore
+                }
+            }
+            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
+        }).start();
+    }
+
+    /**
+     * Esegui il COMMIT di tutte le operazioni in sospeso
+     * Se è un task scheduling, lancia anche le URL
+     */
     public Map<String, Object> commitTransaction() throws Exception {
         Map<String, Object> result = new HashMap<>();
         Connection conn = TransactionService.getConnection();
@@ -1879,6 +1095,8 @@ public class OracleService {
             conn.close();
             
             // LANCIA LE URL DOPO IL COMMIT
+            launchTaskUrls();
+            
             TransactionService.removeConnection();
 
             result.put("success", true);
@@ -1891,6 +1109,10 @@ public class OracleService {
         }
         return result;
     }
+
+    /**
+     * Esegui il ROLLBACK di tutte le operazioni in sospeso
+     */
     public Map<String, Object> rollbackTransaction() throws Exception {
         Map<String, Object> result = new HashMap<>();
         Connection conn = TransactionService.getConnection();
@@ -1918,101 +1140,53 @@ public class OracleService {
         }
         return result;
     }
-            // LANCIA LE URL DOPO IL COMMIT
-            launchTaskUrls();
-
+}
     /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
-     * Lancia le URL dei task in background con delay di 5 secondi tra una e l'altra
+     * Inserisci i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
      */
-
-    public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
+    public Map<String, Object> insertPsRiservati(int giorni) throws Exception {
         Connection conn = null;
         Statement stmt = null;
         Map<String, Object> result = new HashMap<>();
-        List<Map<String, Object>> operations = new ArrayList<>();
 
         try {
             conn = getConnection();
             stmt = conn.createStatement();
-            // Timeout di 2 minuti (120 secondi)
-            stmt.setQueryTimeout(120);
-            conn.setAutoCommit(false);
-            logger.info("Inizio inserimento P.S. Riservati (giorni: {}) - Query timeout: 120 secondi", giorni);
 
-            String[][] queriesPerEnte = {
-                {"P.S. Riservati DEMANIO", buildInsertPsRiservatiQuery("dem_asp", giorni)},
-                {"P.S. Riservati AAMS", buildInsertPsRiservatiQuery("aams_asp", giorni)},
-                {"P.S. Riservati CONSIP", buildInsertPsRiservatiQuery("consip_asp", giorni)},
-                {"P.S. Riservati SOGEI", buildInsertPsRiservatiQuery("sogei_asp", giorni)},
-                {"P.S. Riservati ENTRATE", buildInsertPsRiservatiQuery("entr_asp", giorni)}
+            logger.info("Inizio inserimento P.S. Riservati (giorni: {})", giorni);
+
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            // Query per tutti gli enti
+            String[] insertQueries = {
+                buildInsertPsRiservatiQuery("dem_asp", giorni),
+                buildInsertPsRiservatiQuery("aams_asp", giorni),
+                buildInsertPsRiservatiQuery("consip_asp", giorni),
+                buildInsertPsRiservatiQuery("sogei_asp", giorni),
+                buildInsertPsRiservatiQuery("entr_asp", giorni)
             };
 
+            String[] enti = {"DEMANIO", "AAMS", "CONSIP", "SOGEI", "ENTRATE"};
             int totalRecords = 0;
-            for (String[] queryInfo : queriesPerEnte) {
-                String label = queryInfo[0];
-                String query = queryInfo[1];
+            List<Map<String, Object>> entityResults = new ArrayList<>();
+
+            for (int i = 0; i < insertQueries.length; i++) {
                 try {
-                    logger.info("=== ESECUZIONE QUERY: {} ===", label);
-                    logger.info("Query: {}", query);
-                    int rowsInserted = stmt.executeUpdate(query);
+                    int rowsInserted = stmt.executeUpdate(insertQueries[i]);
                     totalRecords += rowsInserted;
-                    Map<String, Object> op = new HashMap<>();
-                    op.put("label", label);
-                    op.put("recordsAffected", rowsInserted);
-                    operations.add(op);
-                    logger.info("✅ {} completato: {} record", label, rowsInserted);
+                    Map<String, Object> entityResult = new HashMap<>();
+                    entityResult.put("ente", enti[i]);
+                    entityResult.put("recordsInserted", rowsInserted);
+                    entityResults.add(entityResult);
+                    logger.info("Inserimento P.S. Riservati {} - {} record", enti[i], rowsInserted);
                 } catch (Exception e) {
-                    logger.error("❌ Errore nell'inserimento {}: {}", label, e.getMessage(), e);
-                    Map<String, Object> op = new HashMap<>();
-                    op.put("label", label);
-                    op.put("recordsAffected", 0);
-                    op.put("error", e.getMessage());
-                    operations.add(op);
+                    logger.error("Errore nell'inserimento per {}: {}", enti[i], e.getMessage());
+                    Map<String, Object> entityResult = new HashMap<>();
+                    entityResult.put("ente", enti[i]);
+                    entityResult.put("recordsInserted", 0);
+                    entityResult.put("error", e.getMessage());
+                    entityResults.add(entityResult);
                 }
             }
 
@@ -2020,7 +1194,7 @@ public class OracleService {
             result.put("success", true);
             result.put("message", "Inserimento P.S. Riservati in sospeso - In attesa di Commit/Rollback");
             result.put("totalRecords", totalRecords);
-            result.put("operations", operations);
+            result.put("entities", entityResults);
             result.put("giorni", giorni);
 
         } catch (Exception e) {
@@ -2042,59 +1216,7 @@ public class OracleService {
         return result;
     }
 
-    /**
-    public void launchTaskUrls() {
-        logger.warn("⚠️ ATTENZIONE: Verifica SSL disabilitata per chiamate HTTPS");
-        disableSSLVerification();
-
-        String[] urls = {
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=CALLBACK_FLUSSI_EJB",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=GESTIONE_DELEGHE_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_AAMS",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_ENTRATE",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=NOTIFICHE_WKF_SOGEI",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=SOSPESI_ACN",
-            "https://sd20.finanze.it/arcipelago20scheduler-sched/GestioneTaskSchedulati?op=START&taskName=BUCHI_PROTOCOLLO_ACN"
-        };
-
-        logger.info("Lancio {} URL di task in background SEQUENZIALE con delay di 5 secondi", urls.length);
-
-        new Thread(() -> {
-            for (int i = 0; i < urls.length; i++) {
-                String url = urls[i];
-                try {
-                    logger.info("🔄 Richiamando URL [{}/{}]: {}", (i+1), urls.length, url);
-                    java.net.URL urlObj = new java.net.URL(url);
-                    HttpsURLConnection conn = (HttpsURLConnection) urlObj.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setConnectTimeout(10000);
-                    conn.setReadTimeout(10000);
-                    int responseCode = conn.getResponseCode();
-                    logger.info("✅ Risposta [{}/{}] da {}: HTTP {}", (i+1), urls.length, url, responseCode);
-                    conn.disconnect();
-
-                    if (i < urls.length - 1) {
-                        logger.info("⏱️ Attesa 5 secondi prima della prossima URL...");
-                        Thread.sleep(5000);
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("❌ Thread interrotto durante l'attesa: {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                    break;
-                } catch (Exception e) {
-                    logger.error("❌ Errore nel richiamare {}: {}", url, e.getMessage());
-                }
-            }
-            logger.info("✅ Completato lancio di tutte le {} URL", urls.length);
-        }).start();
-    }
-     * Costruisce la query INSERT per P.S. Riservati
-     * Per ENTRATE usa SYSDATE-5, per gli altri SYSDATE-60
-     */
     private String buildInsertPsRiservatiQuery(String schema, int giorni) {
-        // Per ENTRATE usa -5 giorni, per gli altri -60
-        int daysLimit = schema.equals("entr_asp") ? 5 : 60;
-        
         return "INSERT INTO " + schema + ".d_pronto_soccorso_malati " +
                "(sequ_long_id, fk_profilo_doc_proto, data_inserimento, esito, fk_aoo) " +
                "SELECT " + schema + ".s_d_pronto_soccorso_malati.NEXTVAL, " +
@@ -2102,10 +1224,9 @@ public class OracleService {
                "FROM " + schema + ".d_profilo_doc_proto pdp " +
                "WHERE (pdp.flag_riservato_01=1 OR pdp.flag_presenza_dati_sensibili=1) " +
                "AND pdp.fk_ufficio_protocollo IS NOT NULL " +
-               "AND pdp.data_protocollo > SYSDATE-" + daysLimit + " " +
+               "AND pdp.data_protocollo > SYSDATE-60 " +
                "AND (pdp.data_protocollo > SYSDATE-" + giorni + " " +
                "OR (SELECT COUNT(*) FROM " + schema + ".d_attivita dat " +
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
                "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
-}
-}
+    }
