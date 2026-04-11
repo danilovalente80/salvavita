@@ -1052,6 +1052,63 @@ public class OracleService {
 
         return result;
     }
+    public Map<String, Object> commitTransaction() throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        Connection conn = TransactionService.getConnection();
+        
+        try {
+            if (conn == null || conn.isClosed()) {
+                result.put("success", false);
+                result.put("message", "Nessuna transazione in sospeso");
+                return result;
+            }
+
+            logger.info("COMMIT di tutte le operazioni");
+            conn.commit();
+            conn.setAutoCommit(true);
+            conn.close();
+            
+            // LANCIA LE URL DOPO IL COMMIT
+            launchTaskUrls();
+            
+            TransactionService.removeConnection();
+
+            result.put("success", true);
+            result.put("message", "COMMIT eseguito con successo - Task lanciati in background");
+        } catch (Exception e) {
+            logger.error("Errore nel commit: {}", e.getMessage());
+            result.put("success", false);
+            result.put("message", "Errore nel commit: " + e.getMessage());
+            TransactionService.removeConnection();
+        }
+        return result;
+    }
+    public Map<String, Object> rollbackTransaction() throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        Connection conn = TransactionService.getConnection();
+        
+        try {
+            if (conn == null || conn.isClosed()) {
+                result.put("success", false);
+                result.put("message", "Nessuna transazione in sospeso");
+                return result;
+            }
+
+            logger.info("ROLLBACK di tutte le operazioni");
+            conn.rollback();
+            conn.setAutoCommit(true);
+            conn.close();
+            TransactionService.removeConnection();
+
+            result.put("success", true);
+            result.put("message", "ROLLBACK eseguito con successo");
+        } catch (Exception e) {
+            logger.error("Errore nel rollback: {}", e.getMessage());
+            result.put("success", false);
+            result.put("message", "Errore nel rollback: " + e.getMessage());
+            TransactionService.removeConnection();
+        }
+        return result;
     public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
         Connection conn = null;
         Statement stmt = null;
