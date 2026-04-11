@@ -145,8 +145,6 @@ function buildDemoneRow(demone, schema) {
 
 // RIAVVIA DEMONE
 function riavviaDemone(schema, ente) {
-    }
-
     const loadingDiv = document.getElementById('processiLoading');
     loadingDiv.style.display = 'block';
 
