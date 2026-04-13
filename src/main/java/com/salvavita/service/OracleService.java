@@ -484,7 +484,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResultSetOnly(null); // NON chiudere la connessione
         }
 
         return result;
@@ -538,7 +538,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResultSetOnly(null); // NON chiudere la connessione
         }
 
         return result;
@@ -631,7 +631,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResultSetOnly(null); // NON chiudere la connessione
         }
 
         return result;
@@ -823,6 +823,17 @@ public class OracleService {
     }
 
     /**
+     * Chiude solo ResultSet, NON Statement nè Connection (per transazioni in sospeso)
+     */
+    private void closeResultSetOnly(ResultSet rs) {
+        try {
+            if (rs != null) rs.close();
+        } catch (SQLException e) {
+            logger.error("Errore nella chiusura di ResultSet: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Disabilita la verifica SSL per chiamate HTTPS (SOLO PER DEVELOPMENT/TESTING)
      * ⚠️ ATTENZIONE: Non usare in produzione!
      */
@@ -937,7 +948,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResultSetOnly(null); // NON chiudere la connessione
         }
 
         return result;
@@ -1014,7 +1025,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null); // NON chiudere la connessione
+            closeResultSetOnly(null); // NON chiudere la connessione
         }
 
         return result;
@@ -1211,7 +1222,7 @@ public class OracleService {
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
-            closeResources(null, stmt, null);
+            closeResultSetOnly(null);
         }
         return result;
     }
