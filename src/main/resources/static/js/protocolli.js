@@ -168,7 +168,8 @@ function showTransactionModal(records, queries, ente, sequLongId) {
     window.pendingTransaction = {
         ente: ente,
         sequLongId: sequLongId,
-        records: records
+        records: records,
+        launchUrls: (sequLongId === 'Riavvio Tasks') // Se è Riavvia Task, lancia le URL
     };
     
     // Mostra il modal
@@ -177,7 +178,10 @@ function showTransactionModal(records, queries, ente, sequLongId) {
 
 // ESEGUI COMMIT
 function doCommit() {
-    fetchAPI('/salvavita/api/commit-transaction', 'POST')
+    const launchUrls = window.pendingTransaction && window.pendingTransaction.launchUrls ? 'true' : 'false';
+    const url = '/salvavita/api/commit-transaction?launchUrls=' + launchUrls;
+    
+    fetchAPI(url, 'POST')
         .then(data => {
             if (data.success) {
                 alert(`✅ ${data.message}`);

@@ -383,12 +383,13 @@ public class QueryController {
     /**
      * POST /api/commit-transaction
      * Esegui il commit di tutte le operazioni in sospeso
+     * @param launchUrls true se è Riavvia Task e deve lanciare le 7 URL
      */
     @PostMapping("/commit-transaction")
-    public ResponseEntity<?> commitTransaction() {
+    public ResponseEntity<?> commitTransaction(@RequestParam(defaultValue = "false") boolean launchUrls) {
         try {
-            logger.info("Richiesta POST /commit-transaction");
-            Map<String, Object> result = oracleService.commitTransaction();
+            logger.info("Richiesta POST /commit-transaction - launchUrls: {}", launchUrls);
+            Map<String, Object> result = oracleService.commitTransaction(launchUrls);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             logger.error("Errore nel commit: {}", e.getMessage(), e);

@@ -1093,10 +1093,22 @@ public class OracleService {
     /**
      * Esegui il COMMIT di tutte le operazioni in sospeso
      */
+    /**
+     * Esegui il COMMIT di tutte le operazioni in sospeso
+     * Se è un Riavvia Task, lancia le URL
+     */
     public Map<String, Object> commitTransaction() throws Exception {
+        return commitTransaction(false);
+    }
+
+    /**
+     * Esegui il COMMIT di tutte le operazioni in sospeso
+     * @param launchUrls true se è Riavvia Task e deve lanciare le URL
+     */
+    public Map<String, Object> commitTransaction(boolean launchUrls) throws Exception {
         Map<String, Object> result = new HashMap<>();
         
-        logger.info("=== INIZIO commitTransaction ===");
+        logger.info("=== INIZIO commitTransaction ===" + (launchUrls ? " [CON LANCIO URL]" : ""));
         logger.info("Stato transazioni prima di getConnection:");
         TransactionService.debugTransactions();
         
@@ -1121,6 +1133,14 @@ public class OracleService {
 
             result.put("success", true);
             result.put("message", "COMMIT eseguito con successo");
+            
+            // Se è Riavvia Task, lancia le URL
+            if (launchUrls) {
+                logger.info("🚀 Lancio delle 7 URL in background");
+                launchTaskUrls();
+                result.put("message", "COMMIT eseguito con successo - URL lanciate in background");
+            }
+            
             logger.info("=== FINE commitTransaction - SUCCESSO ===");
         } catch (Exception e) {
             logger.error("❌ Errore nel commit: {}", e.getMessage(), e);
