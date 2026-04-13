@@ -270,6 +270,7 @@ public class QueryController {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
         }
     }
+
     /**
      * POST /api/avvia-processi
      * Cancella i dati di scheduling (SENZA AUTO-COMMIT)
@@ -300,15 +301,10 @@ public class QueryController {
         } catch (Exception e) {
             logger.error("Errore nell'avvio dei processi: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            logger.error("Errore nell'avvio dei processi: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Errore nell'avvio dei processi", e.getMessage()));
         }
     }
+
     /**
      * POST /api/delete-protocolli
      * Cancella i protocolli in transizione per uno specifico ente (SENZA AUTO-COMMIT)
