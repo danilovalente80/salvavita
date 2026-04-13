@@ -499,6 +499,8 @@ public class OracleService {
         Map<String, Object> result = new HashMap<>();
 
         try {
+            logger.info("=== INIZIO deleteSchedulingData ===");
+            
             conn = getConnection();
             stmt = conn.createStatement();
 
@@ -506,6 +508,7 @@ public class OracleService {
 
             // Disabilita autocommit
             conn.setAutoCommit(false);
+            logger.info("✅ setAutoCommit(false)");
 
             int rows1 = stmt.executeUpdate("DELETE FROM ejbsched_entr.sched_arcipelago_lmgr");
             int rows2 = stmt.executeUpdate("DELETE FROM ejbsched_entr.sched_arcipelago_lmpr");
@@ -517,7 +520,9 @@ public class OracleService {
             logger.info("Cancellazione dati di scheduling completata - {} record interessati", total);
 
             // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            logger.info("💾 Salvataggio connessione in TransactionService");
             TransactionService.saveConnection(conn);
+            logger.info("=== FINE deleteSchedulingData - In attesa di commit ===");
 
             result.put("success", true);
             result.put("message", "Cancellazione dati scheduling in sospeso - In attesa di Commit/Rollback");
@@ -534,7 +539,7 @@ public class OracleService {
                     logger.error("Errore nel rollback: {}", ex.getMessage());
                 }
             }
-            logger.error("Errore nella cancellazione dei dati di scheduling: {}", e.getMessage(), e);
+            logger.error("❌ Errore nella cancellazione dei dati di scheduling: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "Errore: " + e.getMessage());
         } finally {
@@ -1087,37 +1092,48 @@ public class OracleService {
 
     /**
      * Esegui il COMMIT di tutte le operazioni in sospeso
-     * Se è un task scheduling, lancia anche le URL
      */
     public Map<String, Object> commitTransaction() throws Exception {
         Map<String, Object> result = new HashMap<>();
+        
+        logger.info("=== INIZIO commitTransaction ===");
+        logger.info("Stato transazioni prima di getConnection:");
+        TransactionService.debugTransactions();
+        
         Connection conn = TransactionService.getConnection();
+        logger.info("Connessione ottenuta: {}", conn != null ? "✅ SI" : "❌ NO");
         
         try {
             if (conn == null || conn.isClosed()) {
+                logger.error("❌ ERRORE: Nessuna transazione in sospeso!");
+                TransactionService.debugTransactions();
                 result.put("success", false);
                 result.put("message", "Nessuna transazione in sospeso");
                 return result;
             }
 
-            logger.info("COMMIT di tutte le operazioni");
+            logger.info("✅ COMMIT di tutte le operazioni");
             conn.commit();
             conn.setAutoCommit(true);
             conn.close();
             
-            // LANCIA LE URL DOPO IL COMMIT
-            launchTaskUrls();
-            
             TransactionService.removeConnection();
 
             result.put("success", true);
-            result.put("message", "COMMIT eseguito con successo - Task lanciati in background");
+            result.put("message", "COMMIT eseguito con successo");
+            logger.info("=== FINE commitTransaction - SUCCESSO ===");
         } catch (Exception e) {
-            logger.error("Errore nel commit: {}", e.getMessage());
+            logger.error("❌ Errore nel commit: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "Errore nel commit: " + e.getMessage());
-            TransactionService.removeConnection();
+            try {
+                TransactionService.removeConnection();
+            } catch (Exception ex) {
+                logger.error("Errore nella rimozione della transazione: {}", ex.getMessage());
+            }
         }
+        return result;
+    }
         return result;
     }
 
