@@ -660,7 +660,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM sogei_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM sogei_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('06/05/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'CONSIP' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM consip_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -675,7 +675,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM consip_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM consip_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('20/04/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'DEMANIO' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM dem_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -690,7 +690,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM dem_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM dem_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('10/07/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'ACN' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM acn_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -705,7 +705,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM acn_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM acn_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('20/04/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'EQUI' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM equi_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -720,7 +720,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM equi_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM equi_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('25/06/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'AAMS' ENTE, pt.sequ_long_id, pt.count_recuperi_ejb, pt.presa_visione, " +
                "(SELECT count(*) FROM aams_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -735,7 +735,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM aams_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM aams_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('11/07/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "UNION " +
                "SELECT 'ENTRATE' ENTE, pt.sequ_long_id, NVL(pt.count_recuperi_ejb,0), pt.presa_visione, " +
                "(SELECT count(*) FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id)) IDTRANSIZIONEPRESENTE, " +
@@ -750,7 +750,7 @@ public class OracleService {
                "AND (SELECT count(*) FROM entr_asp.p2_proto_tmp_documenti doc2 " +
                "WHERE doc2.fk_protocollo_temporaneo=pt.sequ_long_id AND doc2.esito_documento=2) = 0 " +
                "AND NOT EXISTS (SELECT 1 FROM entr_asp.p2_protocollo p WHERE p.id_transizione=to_char(pt.sequ_long_id) AND p.numero_protocollo IS NOT NULL) " +
-               "AND pt.data_inserimento > TO_DATE('27/02/2025 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
+               "AND pt.data_inserimento > TO_DATE('01/04/2026 00:00:00', 'dd/mm/yyyy hh24:mi:ss') " +
                "ORDER BY 1, 2";
     }
 
@@ -1134,8 +1134,7 @@ public class OracleService {
         }
         return result;
     }
-        return result;
-    }
+
 
     /**
      * Esegui il ROLLBACK di tutte le operazioni in sospeso
@@ -1167,7 +1166,8 @@ public class OracleService {
         }
         return result;
     }
-}
+    
+    
     /**
      * Inserisci i dati P.S. Riservati per tutti gli enti (SENZA AUTO-COMMIT)
      */
@@ -1257,3 +1257,93 @@ public class OracleService {
                "WHERE dat.fk_documento=pdp.sequ_long_id " +
                "AND dat.dttm_aggiornamento > SYSDATE-" + giorni + ") > 0)";
     }
+    
+    
+    /**
+     * Inserisci P.S. Riservati per tutti gli enti (con parametro giorni)
+     */
+    public Map<String, Object> insertPsRiservatiOperations(int giorni) throws Exception {
+        Connection conn = null;
+        Statement stmt = null;
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> operations = new ArrayList<>();
+
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+
+            // Disabilita autocommit
+            conn.setAutoCommit(false);
+
+            logger.info("Inizio inserimento P.S. Riservati (giorni: {}) - senza autocommit", giorni);
+
+            // Array di query per tutti gli enti
+            String[][] queriesPerEnte = {
+                {"P.S. Riservati DEMANIO", buildInsertPsRiservatiQuery("dem_asp", giorni)},
+                {"P.S. Riservati AAMS", buildInsertPsRiservatiQuery("aams_asp", giorni)},
+                {"P.S. Riservati CONSIP", buildInsertPsRiservatiQuery("consip_asp", giorni)},
+                {"P.S. Riservati SOGEI", buildInsertPsRiservatiQuery("sogei_asp", giorni)},
+                {"P.S. Riservati ENTRATE", buildInsertPsRiservatiQuery("entr_asp", giorni)}
+            };
+
+            int totalRecords = 0;
+
+            for (String[] queryInfo : queriesPerEnte) {
+                String label = queryInfo[0];
+                String query = queryInfo[1];
+                
+                try {
+                    int rowsInserted = stmt.executeUpdate(query);
+                    totalRecords += rowsInserted;
+                    
+                    Map<String, Object> op = new HashMap<>();
+                    op.put("label", label);
+                    op.put("recordsAffected", rowsInserted);
+                    operations.add(op);
+                    
+                    logger.info("{} completato: {} record", label, rowsInserted);
+                } catch (Exception e) {
+                    logger.error("Errore nell'inserimento {}: {}", label, e.getMessage());
+                    Map<String, Object> op = new HashMap<>();
+                    op.put("label", label);
+                    op.put("recordsAffected", 0);
+                    op.put("error", e.getMessage());
+                    operations.add(op);
+                }
+            }
+
+            logger.info("Inserimento P.S. Riservati completato - Totale {} record", totalRecords);
+
+            // SALVA LA CONNESSIONE PER COMMIT/ROLLBACK
+            TransactionService.saveConnection(conn);
+
+            result.put("success", true);
+            result.put("message", "Inserimento P.S. Riservati in sospeso - In attesa di Commit/Rollback");
+            result.put("totalRecords", totalRecords);
+            result.put("operations", operations);
+            result.put("giorni", giorni);
+
+        } catch (Exception e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (Exception ex) {
+                    logger.error("Errore nel rollback: {}", ex.getMessage());
+                }
+            }
+            logger.error("Errore nell'inserimento P.S. Riservati: {}", e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Errore: " + e.getMessage());
+        } finally {
+            closeResources(null, stmt, null);
+        }
+
+        return result;
+    }
+
+   
+    
+
+}
