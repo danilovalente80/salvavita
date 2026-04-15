@@ -53,7 +53,7 @@ public class OracleService {
             props.setProperty("user", dbUser);
             props.setProperty("password", dbPassword);
             props.setProperty("oracle.net.CONNECT_TIMEOUT", "10000"); // 10 secondi
-            props.setProperty("oracle.jdbc.ReadTimeout", "30000"); // 30 secondi
+            props.setProperty("oracle.jdbc.ReadTimeout", "180000"); // 180 secondi = 3 minuti (per query lunghe come P.S. Riservati)
             
             Connection conn = DriverManager.getConnection(dbUrl, props);
             logger.info("Connessione effettuata con successo");
