@@ -88,7 +88,7 @@ function buildProtocolliTable(data) {
             <td>${dataIns}</td>
             <td>${row.statoDocumento || '-'}</td>
             <td>${row.esitoDocumento || '-'}</td>
-            <td style="color: #f44336;">${row.errore || '-'}</td>
+            <td style="color: #f44336;" title="${row.errore || '-'}">${(row.errore && row.errore.length > 200) ? row.errore.substring(0, 200) + '...' : (row.errore || '-')}</td>
         </tr>`;
     });
 
