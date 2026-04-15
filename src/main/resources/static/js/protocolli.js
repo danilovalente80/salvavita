@@ -184,7 +184,6 @@ function doCommit() {
     fetchAPI(url, 'POST')
         .then(data => {
             if (data.success) {
-                alert(`✅ ${data.message}`);
                 closeTransactionModal();
                 // Ricarica i dati
                 loadProtocolliSospesi();
@@ -202,7 +201,6 @@ function doRollback() {
     fetchAPI('/salvavita/api/rollback-transaction', 'POST')
         .then(data => {
             if (data.success) {
-                alert(`✅ ${data.message}`);
                 closeTransactionModal();
             } else {
                 alert(`❌ Errore: ${data.message}`);
